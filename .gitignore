@@ -1,0 +1,33 @@
+# 数据文件
+00_Data/*/
+
+
+
+# 实验输出
+# results/*/
+# processed_data/*/
+#Trial/*/
+实验记录/*/
+01_Output_Classification/*/
+03_Distinguish/Output_Classification/*/
+04_Classification/*/
+04_Classification\Underwater_Noise_Analysis/*/
+07_PreTrial/error_waveforms/*/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+
+# 大型文件
+*.wav
+*.npy
+*.pth
+*.h5
+*.pkl
+*.pt
+*.csv
+*.png

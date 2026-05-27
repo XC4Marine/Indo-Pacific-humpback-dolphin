@@ -1,0 +1,85 @@
+**2026/5/12**
+根据文献Soldevilla MS, Henderson EE, Campbell GS, Wiggins SM, Hildebrand JA, Roch MA. Classification of risso’s and pacific white-sided dolphins using spectral properties of echolocation clicks. J Acoust Soc Am 2008;124:609–24.的方法（见Obsidian，01-传统高频Click信号检测方法），提取出了所有的false click。
+```
+位置：02_ClickDetection\falseclickdetection.ipynb 
+```
+
+**2026/5/12**
+1.根据以上方法，确定每个click信号的长度，小于50us的为clean，50us到100us的为moderate，100us以上的为severe。将各click信号结束点以后的部分，设置为和结束点的幅值一样。
+```
+位置：03_Distinguish
+```
+2.采用XGBoost进行分类：
+[报告 A] 原始测试集 (Standard Test Set):
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00       177
+           1       1.00      1.00      1.00       177
+
+    accuracy                           1.00       354
+   macro avg       1.00      1.00      1.00       354
+weighted avg       1.00      1.00      1.00       354
+
+
+[报告 B] 平移后的测试集 (Shifted Test Set):
+              precision    recall  f1-score   support
+
+           0       0.99      0.65      0.78       177
+           1       0.74      0.99      0.85       177
+
+    accuracy                           0.82       354
+   macro avg       0.87      0.82      0.82       354
+weighted avg       0.87      0.82      0.82       354
+
+仅在测试集和难度测试集引入shift，效果下降
+
+==============================
+1. 原始难度测试集 (无额外平移) 分类报告
+==============================
+              precision    recall  f1-score   support
+
+           0       1.00      0.99      0.99       100
+           1       0.99      1.00      1.00       100
+
+    accuracy                           0.99       200
+   macro avg       1.00      0.99      0.99       200
+weighted avg       1.00      0.99      0.99       200
+
+
+==============================
+2. 平移后难度测试集 (Shift Limit: 5) 分类报告
+==============================
+              precision    recall  f1-score   support
+
+           0       1.00      0.61      0.76       100
+           1       0.72      1.00      0.84       100
+
+    accuracy                           0.81       200
+   macro avg       0.86      0.80      0.80       200
+weighted avg       0.86      0.81      0.80       200
+
+```
+位置：04_Classification/XGBoostBaseline.ipynb
+```
+
+3.在训练集中就引入shift
+--- 标准测试集分类报告 (8:2 Split) ---
+              precision    recall  f1-score   support
+
+    Negative       0.91      0.87      0.89       177
+    Positive       0.88      0.91      0.89       177
+
+    accuracy                           0.89       354
+   macro avg       0.89      0.89      0.89       354
+weighted avg       0.89      0.89      0.89       354
+
+--- 难度测试集分类报告 (Severe Positive + Random Negative) ---
+              precision    recall  f1-score   support
+
+    Negative       1.00      0.85      0.92       100
+    Positive       0.87      1.00      0.93       100
+
+    accuracy                           0.93       200
+   macro avg       0.93      0.93      0.92       200
+weighted avg       0.93      0.93      0.92       200
+
