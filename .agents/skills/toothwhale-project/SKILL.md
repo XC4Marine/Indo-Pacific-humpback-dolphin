@@ -1,4 +1,4 @@
----
+﻿---
 name: toothwhale-project
 description: >
   Indo-Pacific humpback dolphin (Sousa chinensis) bioacoustics research project. Covers click detection,
@@ -9,6 +9,11 @@ description: >
 ---
 
 # ToothWhale Project Skill
+
+## 任务前必读（重要）
+
+- 每次执行任务前，必须先阅读 `.agents/project-knowledge.md` 了解项目整体认知与当前进展。
+- 每次执行任务前，必须先阅读 `.agents/experiment-log.md` 了解历史实验记录与上下游依赖关系。
 
 ## 环境
 

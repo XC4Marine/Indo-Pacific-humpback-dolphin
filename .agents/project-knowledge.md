@@ -1,4 +1,4 @@
-# 项目认知文档
+﻿# 项目认知文档
 
 ## 项目概述
 本项目聚焦于**中华白海豚（Indo-Pacific humpback dolphin, Sousa chinensis）的水下声学信号处理与机器学习分析**。核心任务是检测、分类、定位海豚发出的高频脉冲信号（clicks），并通过深度学习等方法进行混响分类与脉冲串定位。
@@ -27,6 +27,15 @@
 07_PreTrial/                     # 预实验与错误分析
 08_ReverbSeparation/             # 混响分离
 09_Locate/                       # 脉冲串定位（MATLAB→Python 迁移）
+10_AutoCorrMultipath/             # 自相关次峰法直达/多径脉冲检测
+```
+```
+10_AutoCorrMultipath/
+├── autocorr_detect.py            # 100 样本实验脚本
+├── batch_detect.py               # 全量批处理脚本
+├── all_pulse_times.txt           # 18116 个 Click 的直达/多径时间（Tab 分隔）
+├── results.csv / summary.html    # 100 样本实验结果
+└── plots/                        # 100 张波形+自相关双图
 ```
 
 ## 数据特点
@@ -53,3 +62,4 @@
 - [x] 07 模块：预实验已完成，含错误分析
 - [x] 08 模块：混响分离（待验证）
 - [x] 09 模块：locate.m MATLAB 代码已移植为 locate.py（Python），处理完 832 个 PulseTrain 共 18116 个 click
+- [x] 10 模块：自相关次峰法直达/多径脉冲检测完成，10% 阈值下检出 58.5% 片段含多径，输出 all_pulse_times.txt
