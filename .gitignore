@@ -1,33 +1,63 @@
-# 数据文件
-00_Data/*/
+# ======== 数据文件（不上传）========
+# 原始数据
+00_Data/
 
+# 实验输出（大文件结果）
+01_ClickDuration/
+02_ClickDetection/
+03_Distinguish/Output_Classification/
+04_Classification/
+05_DistinguishbyEnergy/
+06_DataSplit/
+07_PreTrial/
+08_ReverbSeparation/
+09_Locate/PulseTrain_*/
 
-
-# 实验输出
-# results/*/
-# processed_data/*/
-#Trial/*/
-实验记录/*/
-01_Output_Classification/*/
-03_Distinguish/Output_Classification/*/
-04_Classification/*/
-04_Classification\Underwater_Noise_Analysis/*/
-07_PreTrial/error_waveforms/*/
-
-# Python
-__pycache__/
-*.py[cod]
-*.so
-.Python
-env/
-venv/
-
-# 大型文件
+# ======== 大型文件类型 ========
 *.wav
 *.npy
 *.pth
 *.h5
 *.pkl
 *.pt
-*.csv
 *.png
+*.jpg
+*.jpeg
+*.pdf
+*.zip
+*.tar.gz
+*.rar
+
+# 大型 CSV 数据文件
+00_Data/*.csv
+*.csv
+
+# ======== Python ========
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# ======== IDE & OS ========
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ======== Jupyter ========
+.ipynb_checkpoints/
+
+# ======== Conda ========
+.conda_envs_dir_test
+
+# ======== Codex内部（不入Git）========
+.tmp/
