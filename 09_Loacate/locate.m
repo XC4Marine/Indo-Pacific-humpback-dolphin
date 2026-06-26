@@ -3,7 +3,7 @@ clc; clear; close all;
 
 % 改变baseDir就可以
 % 路径定义
-baseDir = 'D:\Project_Github\Indo-Pacific-humpback-dolphin\00_Data\ClickTrains\PulseTrain_739';
+baseDir = 'D:\Project_Github\Indo-Pacific-humpback-dolphin\00_Data\ClickTrains\PulseTrain_737';
 trainPath = fullfile(baseDir, 'PulseTrain.wav');
 paramPath = fullfile(baseDir, 'PulseParameters.txt');
 
