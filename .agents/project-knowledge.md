@@ -27,22 +27,22 @@
 07_PreTrial/                     # 预实验与错误分析
 08_ReverbSeparation/             # 混响分离
 09_Locate/                       # 脉冲串定位（MATLAB→Python 迁移）
-10_AutoCorrMultipath/             # 自相关次峰法直达/多径脉冲检测
-```
-```
-10_AutoCorrMultipath/
-├── autocorr_detect.py            # 100 样本实验脚本
-├── batch_detect.py               # 全量批处理脚本
-├── all_pulse_times.txt           # 18116 个 Click 的直达/多径时间（Tab 分隔）
-├── results.csv / summary.html    # 100 样本实验结果
-└── plots/                        # 100 张波形+自相关双图
+10_AutoCorrMultipath/            # 多径检测 (ACF + Teager + Pearson三层过滤, 10%阈值, MAX=3)
+├── autocorr_detect.py           # 100样本实验脚本
+├── batch_detect.py              # 全量批处理脚本
+└── all_pulse_times.txt          # 18116 Click 直达/多径时间表
+11_ChannelMetrics/               # 信道参数计算与异常校准
+├── calc_pulse_params.py         # 信道参数计算 (Delay_us, AmpRatio, Coherence)
+├── recalibrate_fix_v2.py        # RMS质心法锚点校准脚本
+├── pulse_params.txt             # 33376行信道参数 (18116直达 + 15259多径)
+└── anomalous_ampratio_final.txt # AmpRatio<0.9 残留异常 (空)
 ```
 
 ## 数据特点
 
 | 特征 | 描述 |
 |------|------|
-| 采样格式 | .wav 单通道音频 |
+| 采样格式 | .wav 单通道音频, 576kHz |
 | 物种 | 中华白海豚 (Sousa chinensis) |
 | 信号类型 | 高频 click 脉冲串 |
 | 每条脉冲串 | 含 2~100+ 个脉冲，由 PulseParameters.txt 记录各脉冲参数 |
@@ -50,16 +50,33 @@
 | 混响分类 | 三级：Clean（无混响）/ Moderate（中度）/ Severe（严重） |
 | 野外数据 | Results.csv 包含日期/季节/经纬度/水深/海豚群体大小/行为 |
 
-## 项目目标（推断）
+## 项目目标
 1. 从原始水听器录音中检测出海豚的 click 脉冲串
 2. 对每个 click 进行参数提取（持续时间、峰值频率、带宽等）
 3. 区分真实 click 与海洋环境噪声（假阳性检测）
 4. 对 click 进行混响严重程度分类
 5. 最终建立自动化的海豚声学监测与分类系统
 
-## 当前进度（2026-06-26）
-- [x] 01~06 模块：已有 Jupyter Notebook 实现，任务基本完成
-- [x] 07 模块：预实验已完成，含错误分析
-- [x] 08 模块：混响分离（待验证）
-- [x] 09 模块：locate.m MATLAB 代码已移植为 locate.py（Python），处理完 832 个 PulseTrain 共 18116 个 click
-- [x] 10 模块：自相关次峰法直达/多径脉冲检测完成，10% 阈值下检出 58.5% 片段含多径，输出 all_pulse_times.txt
+## 多径检测流水线 (10_AutoCorrMultipath + 11_ChannelMetrics)
+
+### 检测三层过滤
+1. **ACF 次峰初筛**: 归一化自相关, 10% 阈值, |lag|∈[0.1ms, 5ms], 最多 3 个
+2. **Teager 交叉验证** (仅实验脚本): Teager 能量 ≥ 全局最大值 0.1%
+3. **Pearson 相干性**: 直达窗与多径候窗的 Pearson r, |r| ≥ 0.02
+
+### 锚点校准
+- RMS 质心法: 50μs 滑动窗 RMS² argmax 定位最优直达锚点
+
+### 信道三个参数
+- Delay_us: 多径相对直达延迟
+- AmpRatio: RMS(直达) / RMS(多径)
+- Coherence: Pearson r (直达窗, 多径窗)
+
+## 编码环境
+- Python 3.11.15 @ D:\Python_env\toothwhale\python.exe
+- 依赖：numpy, scipy, matplotlib, soundfile, pandas, tqdm, pathlib
+
+## 当前进度（2026-06-27）
+- [x] 01~09 模块：完成
+- [x] 10_AutoCorrMultipath: 三层过滤多径检测 (10%阈值, MAX=3), 10519/18116 Click 检出多径, 15259 多径
+- [x] 11_ChannelMetrics: 18116直达 + 15260多径信道参数, 355异常Click RMS质心校准完成, AmpRatio<0.9 → 0

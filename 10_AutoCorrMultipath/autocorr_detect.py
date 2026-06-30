@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""autocorr_detect.py — 自相关次峰法直达/多径脉冲检测实验"""
+"""autocorr_detect.py — ACF主导+Teager验证 直达/多径脉冲检测实验"""
 
 import sys, time, gc
 from pathlib import Path
@@ -19,9 +19,13 @@ PLOTS_DIR = OUTPUT_DIR / "plots"
 RANDOM_SEED = 12025
 SAMPLE_COUNT = 100
 MIN_LAG_S = 0.1e-3
-CANDIDATE_THRESHOLDS = [0.05, 0.10]
+CANDIDATE_THRESHOLDS = [0.02, 0.03, 0.04, 0.05, 0.08, 0.10]
 MAX_MULTIPATH = 3
-MARK_RANGE_S = 100e-6
+MARK_RANGE_S = 50e-6
+TEAGER_THRESHOLD_FACTOR = 0.001
+MIN_ABS_COHERENCE = 0.02    # ??????????????????????
+MAX_LAG_MS = 5.0             # 最大滞后 (超过5ms的多径不纳入考虑)
+MAX_LAG_S = 4.99e-3          # 严格排除 >= 5.0ms 的边界伪影
 
 def autocorr(signal):
     n = len(signal)
@@ -29,6 +33,102 @@ def autocorr(signal):
     acf_raw = result[n - 1:]
     acf_max = acf_raw[0]
     return acf_raw / acf_max if acf_max > 0 else np.ones_like(acf_raw)
+
+def teager_energy(signal):
+    te = np.zeros_like(signal)
+    te[1:-1] = signal[1:-1] ** 2 - signal[:-2] * signal[2:]
+    te[0] = te[1]
+    te[-1] = te[-2]
+    return te
+
+def teager_validate_at_lag(signal, direct_sample, lag_samples, fs, threshold_factor=TEAGER_THRESHOLD_FACTOR):
+    te = teager_energy(signal)
+    te_abs = np.abs(te)
+    n = len(signal)
+    gm = np.max(te_abs)
+    if gm <= 0:
+        return False, 0.0
+    target_sample = direct_sample + lag_samples
+    if target_sample >= n or target_sample < 0:
+        return False, 0.0
+    hw = max(1, int(50e-6 * fs))
+    local = te_abs[max(0, target_sample - hw): min(n, target_sample + hw + 1)]
+    if len(local) == 0:
+        return False, 0.0
+    ml = np.max(local)
+    return ml >= threshold_factor * gm, ml / gm
+
+
+def pearson_r(signal_a, signal_b):
+    """??????????? Pearson ?????"""
+    if len(signal_a) < 2:
+        return 0.0
+    ma, mb = np.mean(signal_a), np.mean(signal_b)
+    sa = signal_a - ma
+    sb = signal_b - mb
+    num = np.sum(sa * sb)
+    den = np.sqrt(np.sum(sa ** 2) * np.sum(sb ** 2))
+    return float(num / den) if den > 0 else 0.0
+
+def acf_first_then_teager_verify(signal, acf, fs, direct_sample,
+                                   min_lag_samples, max_count, acf_threshold):
+    lags = np.arange(len(acf))
+    mask = lags >= min_lag_samples
+    if not np.any(mask):
+        return [], []
+    acf_v = acf[mask]
+    lag_v = lags[mask]
+    min_dist = max(1, int(30e-6 * fs))
+    peaks_idx, props = find_peaks(acf_v, height=acf_threshold, distance=min_dist,
+                                   prominence=acf_threshold * 0.3)
+    if len(peaks_idx) == 0:
+        return [], []
+    p_lags = list(lag_v[peaks_idx])
+    p_vals = list(props["peak_heights"])
+    si = np.argsort(p_vals)[::-1]
+    p_lags = [p_lags[i] for i in si]
+    p_vals = [p_vals[i] for i in si]
+    confirmed = []
+    # ??????????????????
+    hw_s = 50e-6          # ?50?s ??
+    hw_samples = max(1, int(round(hw_s * fs)))
+    n_sig = len(signal)
+    direct_start = max(0, direct_sample - hw_samples)
+    direct_end = min(n_sig, direct_sample + hw_samples + 1)
+    direct_win = signal[direct_start:direct_end]
+
+    for lag_s, acf_val in zip(p_lags, p_vals):
+        ok, _ = teager_validate_at_lag(signal, direct_sample, lag_s, fs)
+        if not ok:
+            continue
+        if (lag_s / fs) >= MAX_LAG_S:
+            continue
+        # Phase 2: ?????????
+        if MIN_ABS_COHERENCE > 0:
+            target_sample = direct_sample + lag_s
+            mp_start = max(0, target_sample - hw_samples)
+            mp_end = min(n_sig, target_sample + hw_samples + 1)
+            mp_win = signal[mp_start:mp_end]
+            min_len = min(len(direct_win), len(mp_win))
+            if min_len >= 2:
+                coherence = pearson_r(direct_win[:min_len], mp_win[:min_len])
+                if abs(coherence) < MIN_ABS_COHERENCE:
+                    continue
+        confirmed.append((lag_s, acf_val))
+        if len(confirmed) >= max_count:
+            break
+    p_lags = [c[0] for c in confirmed]
+    p_vals = [c[1] for c in confirmed]
+    return p_lags, p_vals
+
+def detect_teager_pulse_for_plot(signal):
+    te = teager_energy(signal)
+    te_abs = np.abs(te)
+    te_max = np.max(te_abs)
+    if te_max <= 0:
+        return np.zeros_like(te_abs), 0.0
+    te_norm = te_abs / te_max
+    return te_norm, te_max
 
 def detect_peaks(acf, lag_samples, threshold, min_lag_samples, max_count, fs):
     pos_mask = lag_samples >= min_lag_samples
@@ -52,7 +152,19 @@ def detect_peaks(acf, lag_samples, threshold, min_lag_samples, max_count, fs):
 def lag_to_offset(l, fs):
     return l / fs
 
-def generate_plot(signal, fs, acf, direct_lag, mp_lags, mp_vals, save_path, label, thresh):
+def generate_plot(signal, fs, acf, direct_lag, mp_lags, mp_vals, save_path, label, thresh,
+                 te_for_plot=None):
+    n = len(signal)
+    t_ms = (np.arange(n) - direct_lag) / fs * 1000
+    lag_ms = np.arange(len(acf)) / fs * 1000
+    mp_offsets = [lag_to_offset(ml, fs) for ml in mp_lags]
+    mp_samps = [direct_lag + int(round(ms * fs)) for ms in mp_offsets]
+    valid = [(i, s) for i, s in enumerate(mp_samps) if 0 <= s < n]
+    mp_samps = [s for _, s in valid]
+    mp_lags_v = [mp_lags[i] for i, _ in valid]
+    mp_vals_v = [mp_vals[i] for i, _ in valid]
+    mr = MARK_RANGE_S * 1000
+    fig, (ax1, ax3, ax2) = plt.subplots(3, 1, figsize=(14, 14))
     n = len(signal)
     t_ms = (np.arange(n) - direct_lag) / fs * 1000
     lag_ms = np.arange(len(acf)) / fs * 1000
@@ -74,10 +186,20 @@ def generate_plot(signal, fs, acf, direct_lag, mp_lags, mp_vals, save_path, labe
     ax1.set_title(label + " — Waveform", fontsize=13, fontweight="bold")
     ax1.set_xlabel("Time (ms)"); ax1.set_ylabel("Amplitude")
     ax1.set_xlim(t_ms[0], t_ms[-1]); ax1.grid(True, alpha=0.3)
-    le = [mpatches.Patch(color="#2E8B57", alpha=0.3, label="Direct pulse ±100μs")]
+    le = [mpatches.Patch(color="#2E8B57", alpha=0.3, label=f"Direct ±{MARK_RANGE_S*1e6:.0f}μs")]
     if len(mp_samps) > 0:
-        le.append(mpatches.Patch(color="#1E90FF", alpha=0.3, label="Multipath ±100μs"))
+        le.append(mpatches.Patch(color="#1E90FF", alpha=0.3, label=f"Multipath ±{MARK_RANGE_S*1e6:.0f}μs"))
     ax1.legend(handles=le, loc="upper right", fontsize=9)
+    if te_for_plot is not None:
+        ax3.plot(t_ms, te_for_plot, color="#D2691E", linewidth=0.6)
+        ax3.axvline(x=0, color="#2E8B57", linewidth=1.0)
+        ax3.axvline(x=MIN_LAG_S * 1000, color="#888888", linewidth=0.8, linestyle=":")
+        for mp_s in mp_samps:
+            t_mp = (mp_s - direct_lag) / fs * 1000
+            ax3.axvline(x=t_mp, color="#1E90FF", linewidth=1.0, linestyle="--")
+        ax3.set_title("Teager Energy (normalized)", fontsize=12, fontweight="bold")
+        ax3.set_xlabel("Time (ms)"); ax3.set_ylabel("Normalized Energy")
+        ax3.set_xlim(t_ms[0], t_ms[-1]); ax3.grid(True, alpha=0.3)
     ax2.plot(lag_ms, acf, color="#0072BD", linewidth=1.0)
     ax2.set_title(f"Autocorrelation — Thresh={thresh*100:.0f}%, MP: {len(mp_samps)}",
                   fontsize=13, fontweight="bold")
@@ -124,6 +246,7 @@ h2{{color:#555;margin-top:30px}}
 <tr><td>实验样本总数</td><td>{total}</td></tr>
 <tr><td>随机种子</td><td>{RANDOM_SEED}</td></tr>
 <tr><td>最佳阈值</td><td>{best_th*100:.1f}%</td></tr>
+<tr><td>Teager 验证阈值</td><td>{TEAGER_THRESHOLD_FACTOR*100:.0f}%</td></tr>
 <tr><td>检出≥1个多径</td><td>{has_mp}/{total}({has_mp/total*100:.1f}%)</td></tr>
 <tr><td>多径总数</td><td>{total_mp}</td></tr>
 <tr><td>平均每片段</td><td>{avg_mp:.2f}</td></tr>
@@ -144,7 +267,7 @@ def read_wav(path):
 
 def main():
     print("=" * 60)
-    print("10_AutoCorrMultipath")
+    print("10_AutoCorrMultipath — ACF主导 + Teager验证")
     print("=" * 60)
 
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -178,10 +301,8 @@ def main():
         acf_list.append((acf, fs, pt, cn, str(wav_path)))
     print(f"完成 {len(acf_list)} 个\n")
 
-    # 阈值判定
-    print("阈值判定：")
-    best_th = None
-    best_d = float("inf")
+    # ???? ? ???????? ACF ???????????
+    print("????????????????? 2.0% ????")
     for th in CANDIDATE_THRESHOLDS:
         cnt = []
         for acf, fs, pt, cn, wp in acf_list:
@@ -190,15 +311,11 @@ def main():
             cnt.append(len(pl))
         avg = np.mean(cnt) if cnt else 0
         nz = sum(1 for c in cnt if c > 0) / len(cnt) if cnt else 0
-        print(f"  {th*100:.0f}%: avg={avg:.2f}, 非零={nz:.1%}")
-        if 0 < avg <= MAX_MULTIPATH and abs(avg - 1.5) < abs(best_d - 1.5):
-            best_d = abs(avg - 1.5); best_th = th
-    if best_th is None:
-        best_th = max(CANDIDATE_THRESHOLDS)
-    print(f"  >> {best_th*100:.1f}%\n")
+        print(f"  {th*100:.0f}%: avg={avg:.2f}, ??={nz:.1%}")
+    best_th = 0.10  # Phase 3 选定10% ACF 阈值，约 1.15 个/样本
+    print(f"  >> ????: {best_th*100:.1f}%\n")
 
-    # 阶段 2: 可视化
-    print("阶段 2/2: 生成图表...")
+    print("阶段 2/2: 生成图表 (ACF + Teager验证)...")
     results = []
     plot_files = []
     pbar = tqdm(total=len(acf_list), desc="总进度", unit="f")
@@ -206,10 +323,13 @@ def main():
         signal, _ = read_wav(Path(wav_path))
         ds = len(signal) // 2
         min_ls = int(round(MIN_LAG_S * fs))
-        pl, pv = detect_peaks(acf, np.arange(len(acf)), best_th, min_ls, MAX_MULTIPATH, fs)
+        pl, pv = acf_first_then_teager_verify(
+            signal, acf, fs, ds, min_ls, MAX_MULTIPATH, best_th)
+        te_for_plot, _ = detect_teager_pulse_for_plot(signal)
         plot_fn = f"{idx+1:03d}_{pt}_{cn}.png"
         pp = PLOTS_DIR / plot_fn
-        generate_plot(signal, fs, acf, ds, pl, pv, pp, f"{pt}/{cn}", best_th)
+        generate_plot(signal, fs, acf, ds, pl, pv, pp, f"{pt}/{cn}", best_th,
+                     te_for_plot=te_for_plot)
         plot_files.append(plot_fn)
         results.append({
             "pt": pt, "cn": cn, "n_mp": len(pl),

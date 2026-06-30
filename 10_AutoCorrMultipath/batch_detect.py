@@ -15,8 +15,11 @@ TXT_PATH = OUTPUT_DIR / "all_pulse_times.txt"
 
 # ── 参数 ──
 MIN_LAG_S = 0.1e-3           # 最小滞后 (避开直达峰)
-THRESHOLD = 0.10             # 10% 阈值
-MAX_MULTIPATH = 3            # 最多多径数
+THRESHOLD = 0.10            # 10% 阈值
+MAX_MULTIPATH = 3             # 最多取3个
+MAX_LAG_MS = 5.0             # 最大滞后(超过5ms的多径不纳入考虑)
+MAX_LAG_S = 4.99e-3          # 严格排除 >= 5.0ms 的边界伪影
+MIN_ABS_COHERENCE = 0.02    # ??????????????????????
 FS = 576000                  # 采样率
 WINDOW_SAMPLES = 5761        # 窗口长度
 DIRECT_OFFSET_S = 5e-3       # 直达脉冲位于窗口中心 (+5ms)
@@ -28,13 +31,25 @@ def autocorr(signal):
     acf_max = acf_raw[0]
     return acf_raw / acf_max if acf_max > 0 else np.ones_like(acf_raw)
 
+
+def pearson_r(signal_a, signal_b):
+    """??????????? Pearson ?????"""
+    if len(signal_a) < 2:
+        return 0.0
+    ma, mb = np.mean(signal_a), np.mean(signal_b)
+    sa = signal_a - ma
+    sb = signal_b - mb
+    num = np.sum(sa * sb)
+    den = np.sqrt(np.sum(sa ** 2) * np.sum(sb ** 2))
+    return float(num / den) if den > 0 else 0.0
+
 def detect_peaks(acf, lag_samples, threshold, min_lag_samples, max_count, fs):
     pos_mask = lag_samples >= min_lag_samples
     acf_valid = acf[pos_mask]
     lag_valid = lag_samples[pos_mask]
     if len(acf_valid) == 0:
         return [], []
-    min_distance = max(1, int(30e-6 * fs))
+    min_distance = max(1, int(50e-6 * fs))
     peaks_idx, props = find_peaks(acf_valid, height=threshold, distance=min_distance,
                                    prominence=threshold * 0.5)
     if len(peaks_idx) == 0:
@@ -62,14 +77,14 @@ def main():
     all_wavs = sorted(LOCATE_DIR.rglob("Pulse_*.wav"))
     total = len(all_wavs)
     print(f"\n# 发现 {total} 个 Click 片段")
-    print(f"# 阈值: {THRESHOLD*100:.0f}%, 最大多径数: {MAX_MULTIPATH}, 最小滞后: {MIN_LAG_S*1e3:.2f}ms")
+    print(f"# 阈值: {THRESHOLD*100:.0f}%, 最大多径数: {MAX_MULTIPATH}, 滞后范围: {MIN_LAG_S*1e3:.2f}ms ~ {MAX_LAG_MS:.0f}ms")
     print(f"# 输出: {TXT_PATH}\n")
 
     min_ls = int(round(MIN_LAG_S * FS))
 
     with open(str(TXT_PATH), "w", encoding="utf-8") as f_out:
         f_out.write("# 10_AutoCorrMultipath — 全量直达/多径脉冲时间\n")
-        f_out.write(f"# 检测参数: threshold={THRESHOLD*100:.0f}%, min_lag={MIN_LAG_S*1e3:.2f}ms, max_mp={MAX_MULTIPATH}\n")
+        f_out.write(f"# 检测参数: threshold={THRESHOLD*100:.0f}%, min_lag={MIN_LAG_S*1e3:.2f}ms, max_lag={MAX_LAG_MS:.0f}ms, max_mp={MAX_MULTIPATH}\n")
         f_out.write("# 格式: PulseTrain  ClickName  直达时间(ms)  多径1时间(ms)  多径2...  多径3\n")
         f_out.write("# 直达时间固定为 +5.0000ms (窗口中心)\n")
         f_out.write("#\n")
@@ -81,6 +96,35 @@ def main():
             signal, fs = read_wav(wav_path)
             acf = autocorr(signal)
             pl, pv = detect_peaks(acf, np.arange(len(acf)), THRESHOLD, min_ls, MAX_MULTIPATH, fs)
+            # 剔除 >= 5.0ms 的边界伪影（严格 < 4.99ms）
+            max_ls = int(round(MAX_LAG_S * FS))
+            valid_filter = [i for i, l in enumerate(pl) if l < max_ls]
+            pl = [pl[i] for i in valid_filter]
+            pv = [pv[i] for i in valid_filter]
+            # Phase 2: ????????? (Pearson r, |coherence| >= 0.10)
+            if MIN_ABS_COHERENCE > 0 and len(pl) > 0:
+                n_sig = len(signal)
+                hw_s = 50e-6
+                hw_samples = max(1, int(round(hw_s * FS)))
+                direct_sample = len(signal) // 2  # ????
+                direct_start = max(0, direct_sample - hw_samples)
+                direct_end = min(n_sig, direct_sample + hw_samples + 1)
+                direct_win = signal[direct_start:direct_end]
+                coherence_filter = []
+                for j, l in enumerate(pl):
+                    target_sample = direct_sample + l
+                    mp_start = max(0, target_sample - hw_samples)
+                    mp_end = min(n_sig, target_sample + hw_samples + 1)
+                    mp_win = signal[mp_start:mp_end]
+                    min_len = min(len(direct_win), len(mp_win))
+                    if min_len >= 2:
+                        coherence = pearson_r(direct_win[:min_len], mp_win[:min_len])
+                        if abs(coherence) >= MIN_ABS_COHERENCE:
+                            coherence_filter.append(j)
+                    else:
+                        coherence_filter.append(j)
+                pl = [pl[j] for j in coherence_filter]
+                pv = [pv[j] for j in coherence_filter]
 
             pt = wav_path.parent.parent.name          # PulseTrain_XXX
             cn = wav_path.parent.name                  # Click_YYY
@@ -94,13 +138,10 @@ def main():
             if len(mp_times_ms) > 0:
                 stats["has_mp"] += 1
 
-            # 构建每行: PT Click direct_ms mp1 mp2 mp3 (空位用 NaN)
+            # ????: PT Click direct_ms mp1 mp2 ... (????)
             parts = [pt, cn, f"{direct_ms:.4f}"]
-            for i in range(MAX_MULTIPATH):
-                if i < len(mp_times_ms):
-                    parts.append(f"{mp_times_ms[i]:.4f}")
-                else:
-                    parts.append("NaN")
+            for t in mp_times_ms:
+                parts.append(f"{t:.4f}")
             f_out.write("\t".join(parts) + "\n")
 
             pbar.update(1)

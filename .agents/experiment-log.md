@@ -3,84 +3,101 @@
 ## 2026-06-26 — 09_Locate: MATLAB → Python 迁移
 
 ### 完成内容
-- 将 `09_Locate/locate.m` 的 MATLAB 逻辑移植为 Python 脚本 `09_Locate/locate.py`
-- 脚本功能：基于 IPI 模板互相关定位每个 click 的理论中心位置，截取 ±5ms 窗口
-- 输出：每个 click 的 .wav 音频片段、波形图（灰曲线+红色中心线）、TEO+自相关分析图
-- 处理结果：832 个 PulseTrain 全部处理完毕，共 18116 个 click 文件夹
+- 将 `09_Locate/locate.m` 移植为 Python 脚本 `09_Locate/locate.py`
+- 功能：基于 IPI 模板互相关定位 click 中心，截取 ±5ms 窗口
+- 处理结果：832 个 PulseTrain，共 18116 个 Click 文件夹
 
 ### 算法流程
-1. 读取 PulseTrain.wav + PulseParameters.txt（自动适应 UTF-8/GBK 编码）
-2. 从 IPI(ms) 列构造理想脉冲模板向量
-3. 计算 TEO（Teager Energy Operator）：x(n)^2 - x(n-1)*x(n+1)，并归一化
-4. 全局互相关对齐（scipy.signal.correlate），得最佳滞后偏移
-5. 对每个 pulse 中心位置截取 ±5ms，保存 wav/波形图/分析图
+1. 读取 PulseTrain.wav + PulseParameters.txt
+2. 从 IPI 构造理想脉冲模板向量
+3. 计算 TEO 并归一化
+4. 全局互相关对齐（scipy.signal.correlate）
+5. 每 pulse 截取 ±5ms 保存 wav/波形图/分析图
 
 ### 输出结构
 ```
-09_Locate/
-├── locate.py
-└── PulseTrain_XXX/
-    └── Click_YYY/
-        ├── Pulse_YYY.wav
-        ├── Waveform_YYY.png
-        └── Analysis_YYY.png
+09_Locate/PulseTrain_XXX/Click_YYY/
+├── Pulse_YYY.wav          (576kHz, 5761 samples, ±5ms)
+├── Waveform_YYY.png
+└── Analysis_YYY.png
 ```
 
-### Python 环境
-- Python 3.11.15 @ D:\Python_env\toothwhale\python.exe
-- 依赖：numpy, scipy, matplotlib, soundfile, pandas, tqdm
+## 2026-06-26 — 10_AutoCorrMultipath & 11_ChannelMetrics: 多径检测与信道参数计算
 
-### 与之前实验的关系
-- 本模块位于数据处理流水线的后半段（脉冲串定位）
-- 上游依赖：00_Data/ClickTrains 中的数据（由更早的 click 检测与参数提取步骤生成）
-- 下游：定位后的 click 片段可用于后续的 04_Classification 分类实验或更深层分析
-- 本脚本替代了 MATLAB 的手动单文件夹处理方式，实现了 832 个文件夹的批量自动处理
-## 2026-06-26 — 10_AutoCorrMultipath: 基于自相关次峰法的直达/多径脉冲检测
+### 多径检测方法 (ACF + Teager + Pearson 三层过滤)
 
-### 完成内容
-- 编写 `10_AutoCorrMultipath/autocorr_detect.py`：自相关次峰法实验脚本
-  - 自相关计算（`numpy.correlate`，归一化使 Lag=0 处为 1.0）
-  - 直达脉冲定位在 t=0（窗口中心，±100μs 标注）
-  - 多径检测：|lag| > 0.1ms 区间内 `scipy.signal.find_peaks` 检测次峰
-  - 自适应阈值判定：对比 5% 和 10% 两个候选阈值，选定 10%（平均 1.15 个/样本）
-  - 多径数量约束：按相关系数降序，最多取 3 个
-  - 可视化：波形图（上）+ 自相关图（下），绿色标注直达、蓝色标注多径，±100μs 半透明色带
-- 100 样本实验：随机种子 12025，生成 100 张双图 + results.csv + summary.html
-- 编写 `10_AutoCorrMultipath/batch_detect.py`：全量批处理脚本
-- 对全部 18116 个 Click 片段运行检测，生成 `all_pulse_times.txt`
+#### 第一层：自相关 (ACF) 次峰初筛
+- `numpy.correlate` 归一化自相关，Lag=0 处为 1.0
+- 在 |lag| > 0.1ms、< 5ms 区间内 `scipy.signal.find_peaks` 检测次峰
+- 阈值 10%（次峰 ≥ 主峰高度的 10%），峰间距 ≥ 30μs
+- 按相关系数降序选取，最多 3 个多径候选
 
-### 关键结果
-| 指标 | 100 样本实验 | 全量 (18116) |
-|------|-------------|-------------|
-| 阈值 | 10% | 10% |
-| 检出≥1个多径 | 69/100 (69.0%) | 10603/18116 (58.5%) |
-| 多径总数 | 115 | 17153 |
-| 平均每片段 | 1.15 | 0.95 |
-| 耗时 | ~22s | ~51s |
+#### 第二层：Teager 能量交叉验证 (仅 autocorr_detect.py)
+- 计算全信号 Teager Energy Operator: x(n)^2 - x(n-1)x(n+1)
+- 验证候选位置 Teager 能量是否 ≥ 全局最大值的 0.1%
+- 不通过则移出候选
 
-### 算法参数
-- 阈值：次峰高度 ≥ 主峰的 10%
-- 最小滞后：0.1ms（排除直达峰邻近区域）
-- 最小峰间距：30μs（find_peaks distance）
-- 最大多径数：3（按相关系数降序选取）
-- 前后标注范围：±100μs
+#### 第三层：Pearson 相干性过滤
+- 直达窗 (±50μs) 与多径候选窗 (±50μs) 计算 Pearson r
+- 若 |r| < 0.02 则视为不相干噪声，移出候选
 
-### 输出结构
-```
-10_AutoCorrMultipath/
-├── autocorr_detect.py          # 100 样本实验脚本
-├── batch_detect.py             # 全量批处理脚本
-├── results.csv                 # 100 样本详细结果
-├── summary.html                # 100 样本可视化汇总
-├── all_pulse_times.txt         # 全量结果（每行一个 Click）
-└── plots/                      # 100 张波形+自相关双图
-```
+#### 信道参数计算 (calc_pulse_params.py)
+- 窗宽 ±50μs RMS 计算：直达 RMS / 多径 RMS = AmpRatio
+- Pearson 相干性：直达窗与多径窗的 Pearson r
+- Delay_us: 多径时间相对直达时间的延迟
 
-### all_pulse_times.txt 格式
-- Tab 分隔：`PulseTrain_XXX Click_YYY 直达时间(ms) 多径1(ms) 多径2(ms) 多径3(ms)`
-- 直达时间固定为 5.0000 ms（窗口中心）
-- 多径时间 = 5.0000 + 自相关滞后偏移，无多径填 NaN
+### 全量批处理结果 (10%, MAX=3)
+| 指标 | 值 |
+|------|-----|
+| 总 Click | 18116 |
+| 检出多径 Click | 10519 (58.1%) |
+| 多径总数 | 15307 |
+| 平均每 Click | 0.84 |
+| 100 样本验证 | 65.0% 检出, 平均 1.13 个/样本 |
 
-### 与之前实验的关系
-- 上游依赖：`09_Locate` 切分的 18116 个 Click 片段（Pulse_*.wav, 576kHz, 5761 samples, ±5ms 窗口）
-- 下游用途：脉冲时间信息可用于混响分类（直达 vs 多径分离）、多径结构统计、声传播路径分析
+### 输出文件
+- `10_AutoCorrMultipath/autocorr_detect.py`: 100 样本实验脚本
+- `10_AutoCorrMultipath/batch_detect.py`: 全量批处理
+- `10_AutoCorrMultipath/all_pulse_times.txt`: PulseTrain/Click/直达ms/多径1ms/多径2ms/多径3ms
+- `11_ChannelMetrics/calc_pulse_params.py`: 信道参数计算
+- `11_ChannelMetrics/pulse_params.txt`: 33376 行 (Direct + Multipath_X, Delay_us/AmpRatio/Coherence)
+
+## 2026-06-27 — 11_ChannelMetrics: RMS 质心法锚点校准
+
+### 背景
+- 使用 `calc_pulse_params.py` 计算后检测到 355 个 Click 含 AmpRatio < 0.9 异常径
+- 异常原因：原始窗口中心 ≠ 真实直达脉冲位置，导致 AmpRatio 被低估
+- 编写 `recalibrate_fix_v2.py` 实现自动校准
+
+### 校准算法 (recalibrate_fix_v2.py)
+1. 读入 pulse_params.txt，筛选 AmpRatio < 0.9 的 Click
+2. 对每个异常 Click 读原始 Pulse_YYY.wav
+3. **RMS 质心法**定位：50μs 滑动窗求 RMS²，取 argmax 作为新直达锚点
+4. 以新锚点为基准重新 ACF 检测 (10% 阈值, MAX=3)
+5. Pearson 相干性过滤 (|r| ≥ 0.02)
+6. 边界保护：多径绝对时间 < 音频总长度
+7. 重算 Delay_us、AmpRatio、Coherence
+8. 值替换写入 all_pulse_times.txt 和 pulse_params.txt
+
+### 校准结果
+| 指标 | 值 |
+|------|-----|
+| 校准前异常 Click | 355 |
+| 成功校准 | 355 |
+| 新检出多径 | 558 |
+| 最终直达径 | 18116 |
+| 最终多径 | 15260 |
+| 校准后 AmpRatio<0.9 | 0 |
+| 耗时 | 2.6s |
+
+### 输出文件
+- `11_ChannelMetrics/recalibrate_fix_v2.py`: 校准脚本
+- `11_ChannelMetrics/anomalous_ampratio_final.txt`: 残留异常明细 (空)
+- `10_AutoCorrMultipath/all_pulse_times.txt`: 已更新
+- `11_ChannelMetrics/pulse_params.txt`: 已更新
+
+## 2026-06-27 — 参数回退: 删除多维测距、恢复检测条件
+
+- 删除 `12_PulseClustering/` 文件夹 (多维距离测度聚类)
+- MAX_MULTIPATH 回归 8→3, ACF 阈值回归 2%→10%
+- 以上全部记录为回退后最终状态

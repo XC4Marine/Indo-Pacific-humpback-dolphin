@@ -1,0 +1,3 @@
+# 校准后仍 AmpRatio < 0.9 的异常径 (10% 阈值, MAX=3)
+# 异常径数: 0
+# PulseTrain	ClickName	PathType	MaxDelay_us	AmpRatio	Coherence
