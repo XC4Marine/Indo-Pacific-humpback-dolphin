@@ -101,3 +101,65 @@
 - 删除 `12_PulseClustering/` 文件夹 (多维距离测度聚类)
 - MAX_MULTIPATH 回归 8→3, ACF 阈值回归 2%→10%
 - 以上全部记录为回退后最终状态
+
+## 2026-06-30 — 13_Negative: Hard Negatives 自动挖掘脚本
+
+### 完成内容
+- 新建 `13_Negative/` 模块，用于从 `00_Data/original_audio/*.wav` 长录音中自动挖掘难负样本脉冲
+- 默认保护索引改为 `00_Data/AllTrain.csv`，按 `Ori_file_num(No.)` 分组构建保护区间，覆盖 click、buzz、burst pulse 等不可作为噪声的片段
+- 新增三份代码：
+  - `13_Negative/masking.py`: 解析 AllTrain.csv，按 `Train_start(s)` / `Train_end(s)` 扩展前后 10ms，构建 IntervalTree 保护带
+  - `13_Negative/filtering.py`: 带通滤波、TEO、频谱质心、归一化 ACF 次峰和 Pearson 相干性校验
+  - `13_Negative/mine_negatives.py`: 分块读取 2GB 级长录音，多进程文件级调度，保存 `Negative_Samples/*.wav` 和 `negative_samples_log.csv`
+
+### 算法流程
+1. AllTrain.csv 中每条记录转换为毫秒区间，并前后扩展 10ms 作为排他保护带
+2. 对长录音分块估计平滑 TEO 第 40 百分位数，使用 3 倍底噪阈值触发候选锚点
+3. 对候选锚点执行保护区间排除，命中 AllTrain 保护带则跳过
+4. 截取锚点 ±50μs 计算频谱质心，剔除低频易负样本
+5. 在锚点后 5ms 窗口计算 ACF，检测 0.1ms 到 5ms 次峰，并用 Pearson |r| >= 0.02 校验
+6. 有合格次峰标记为 `Type_3_Multipath_Noise`，否则标记为 `Type_4_Isolated_Noise`
+7. 以锚点为中心保存 ±5ms wav，并汇总元数据 CSV
+
+### 验证结果
+- `D:\Python_env\toothwhale\python.exe -m compileall 13_Negative` 通过
+- `mine_negatives.py --help` 通过
+- `AllTrain.csv` 解析通过：34 个原始录音编号，共 897 个保护区间
+- 已安装 `intervaltree==3.2.1`
+- 全量运行完成：35 个原始 wav，目标总量 90,580（18116 click 的 5 倍），每个 wav 均衡保存 2,588 个
+- 运行参数：`--workers 2 --block-seconds 5 --target-total 90580 --teo-threshold-factor 5 --max-candidates-per-block 20 --min-free-gb 10`
+- 输出统计：`Type_3_Multipath_Noise` 64,133 个，`Type_4_Isolated_Noise` 26,447 个
+- 输出体积：90,580 个 wav，共约 1.05 GB；运行耗时 1,199.3 s
+- 结果一致性检查：`negative_samples_log.csv` 90,580 行，`Negative_Samples/*.wav` 90,580 个
+
+### 上下游关系
+- 上游依赖：`00_Data/AllTrain.csv`、`00_Data/original_audio/*.wav`
+- 下游用途：为后续正负样本分类、困难负样本扩充和误检分析提供噪声脉冲片段
+
+## 2026-07-01 — 13_Negative: 20-190 kHz 带通与去除 HFER 后重挖
+
+### 完成内容
+- 在负样本挖掘预处理中加入 Butterworth 带通滤波，默认保留 `20-190 kHz`，滤除 `20 kHz` 以下与 `190 kHz` 以上成分
+- `mine_negatives.py` 支持 `--sample-rate 0` 自动从原始 wav 读取采样率；本轮读取结果为 `576000 Hz`
+- 根据带通后 HFER 失去区分度的问题，移除高低频能量比指标：
+  - `filtering.py` 不再计算或返回 HFER
+  - `mine_negatives.py` 不再在候选、日志 CSV 中保存 HFER
+  - `negative_samples_log.csv` 列变为 `Audio_File, Noise_Timestamp(s), Centroid, Noise_Type`
+
+### 运行参数
+- 输出目录：`D:\Project_Github\Indo-Pacific-humpback-dolphin\13_Negative_Bandpass_20k_190k_NoHFER`
+- 命令参数：`--workers 2 --block-seconds 5 --target-total 90580 --teo-threshold-factor 5 --max-candidates-per-block 20 --min-free-gb 10 --sample-rate 0 --bandpass-low-hz 20000 --bandpass-high-hz 190000 --bandpass-order 6`
+
+### 验证结果
+- `D:\Python_env\toothwhale\python.exe -m compileall 13_Negative` 通过
+- `mine_negatives.py --help` 通过
+- 全量运行完成：35 个原始 wav，输出 `90,580` 个负样本 wav
+- 类型统计：`Type_3_Multipath_Noise` 62,356 个，`Type_4_Isolated_Noise` 28,224 个
+- 耗时：2,111.4 s
+- 一致性检查：`negative_samples_log.csv` 90,580 行，`Negative_Samples/*.wav` 90,580 个
+- CSV 列检查：无 HFER，仅保留 `Audio_File`、`Noise_Timestamp(s)`、`Centroid`、`Noise_Type`
+- wav 抽检：采样率 `576000 Hz`，单通道
+
+### 上下游关系
+- 上游依赖：`00_Data/AllTrain.csv`、`00_Data/original_audio/*.wav`
+- 替代 2026-06-30 版本作为当前推荐负样本集；2026-07-01 早先输出到 `13_Negative_Bandpass_20k_190k` 的中间结果是在 HFER 尚未移除时产生，不作为最终结果

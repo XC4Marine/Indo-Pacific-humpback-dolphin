@@ -32,6 +32,13 @@
 00_Data/*.csv
 *.csv
 
+# 负样本挖掘输出与样本索引副本（本地保留，不上传 Git）
+13_Negative_Bandpass_20k_190k_NoHFER/Negative_Samples/
+13_Negative_Bandpass_20k_190k_NoHFER/_per_file_logs/
+13_Negative_Bandpass_20k_190k_NoHFER/negative_samples_log.csv
+14/negative_samples_log.csv
+14/pulse_params.txt
+
 # ======== Python ========
 __pycache__/
 *.py[cod]

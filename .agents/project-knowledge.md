@@ -36,6 +36,10 @@
 ├── recalibrate_fix_v2.py        # RMS质心法锚点校准脚本
 ├── pulse_params.txt             # 33376行信道参数 (18116直达 + 15259多径)
 └── anomalous_ampratio_final.txt # AmpRatio<0.9 残留异常 (空)
+13_Negative/                     # 长录音 Hard Negatives 自动挖掘
+├── masking.py                   # 读取 AllTrain.csv 并构建按原始录音编号分组的保护区间树
+├── filtering.py                 # 带通滤波、TEO、频谱质心、ACF次峰与Pearson相干性校验
+└── mine_negatives.py            # 多进程文件级调度, 导出 negative_samples_log.csv 与 Negative_Samples/*.wav
 ```
 
 ## 数据特点
@@ -49,6 +53,8 @@
 | 关键参数 | SNR、IPI（脉冲间隔）、SPLpp、Duration、Fpeak、带宽 |
 | 混响分类 | 三级：Clean（无混响）/ Moderate（中度）/ Severe（严重） |
 | 野外数据 | Results.csv 包含日期/季节/经纬度/水深/海豚群体大小/行为 |
+| 负样本挖掘保护索引 | 13_Negative 默认使用 AllTrain.csv，覆盖 click、buzz、burst pulse 所在时段，避免将其误当噪声 |
+| 当前负样本预处理 | 20-190 kHz Butterworth 带通；不再使用 HFER 高低频能量比 |
 
 ## 项目目标
 1. 从原始水听器录音中检测出海豚的 click 脉冲串
@@ -74,9 +80,10 @@
 
 ## 编码环境
 - Python 3.11.15 @ D:\Python_env\toothwhale\python.exe
-- 依赖：numpy, scipy, matplotlib, soundfile, pandas, tqdm, pathlib
+- 依赖：numpy, scipy, matplotlib, soundfile, pandas, tqdm, pathlib, intervaltree
 
-## 当前进度（2026-06-27）
+## 当前进度（2026-07-01）
 - [x] 01~09 模块：完成
 - [x] 10_AutoCorrMultipath: 三层过滤多径检测 (10%阈值, MAX=3), 10519/18116 Click 检出多径, 15259 多径
 - [x] 11_ChannelMetrics: 18116直达 + 15260多径信道参数, 355异常Click RMS质心校准完成, AmpRatio<0.9 → 0
+- [x] 13_Negative: 长录音 Hard Negatives 自动挖掘完成，默认以 AllTrain.csv 构建排他保护带；当前推荐结果为 `13_Negative_Bandpass_20k_190k_NoHFER`，输出 90,580 个负样本，CSV 不含 HFER

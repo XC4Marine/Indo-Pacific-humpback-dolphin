@@ -1,0 +1,22 @@
+========================================================================
+13_Negative - Hard Negatives 自动挖掘
+========================================================================
+音频目录: D:\Project_Github\Indo-Pacific-humpback-dolphin\00_Data\original_audio
+保护索引: D:\Project_Github\Indo-Pacific-humpback-dolphin\00_Data\AllTrain.csv
+负样本目录: D:\Project_Github\Indo-Pacific-humpback-dolphin\13_Negative_Bandpass_20k_190k_NoHFER\Negative_Samples
+日志输出: D:\Project_Github\Indo-Pacific-humpback-dolphin\13_Negative_Bandpass_20k_190k_NoHFER\negative_samples_log.csv
+进程数: 2
+------------------------------------------------------------------------
+自动读取采样率: 576000 Hz
+预处理带通: 20000-190000 Hz, order=6
+目标总量: 90580，按 35 个 wav 均衡保存，每文件最多 2588 个
+
+========================================================================
+挖掘完成
+处理文件数: 35
+负样本总数: 90580
+类型统计: {'Type_4_Isolated_Noise': 28224, 'Type_3_Multipath_Noise': 62356}
+耗时: 2111.4s
+CSV: D:\Project_Github\Indo-Pacific-humpback-dolphin\13_Negative_Bandpass_20k_190k_NoHFER\negative_samples_log.csv
+WAV: D:\Project_Github\Indo-Pacific-humpback-dolphin\13_Negative_Bandpass_20k_190k_NoHFER\Negative_Samples
+========================================================================
