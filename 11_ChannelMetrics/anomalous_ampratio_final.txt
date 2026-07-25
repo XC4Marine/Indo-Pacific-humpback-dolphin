@@ -1,3 +1,3 @@
-# 校准后仍 AmpRatio < 0.9 的异常径 (10% 阈值, MAX=3)
+# 前置锚点校准并完成多径检测后仍 AmpRatio < 0.9 的异常径
 # 异常径数: 0
-# PulseTrain	ClickName	PathType	MaxDelay_us	AmpRatio	Coherence
+# PulseTrain	ClickName	PathType	Delay_us	AmpRatio	Coherence

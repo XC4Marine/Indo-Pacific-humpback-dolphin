@@ -163,3 +163,58 @@
 ### 上下游关系
 - 上游依赖：`00_Data/AllTrain.csv`、`00_Data/original_audio/*.wav`
 - 替代 2026-06-30 版本作为当前推荐负样本集；2026-07-01 早先输出到 `13_Negative_Bandpass_20k_190k` 的中间结果是在 HFER 尚未移除时产生，不作为最终结果
+
+## 2026-07-18 — 10_AutoCorrMultipath & 11_ChannelMetrics: 前置 RMS 质心锚点校准后重算
+
+### 完成内容
+- 将 `11_ChannelMetrics/recalibrate_fix_v2.py` 从“仅修复 AmpRatio<0.9 异常 Click”的后处理脚本，调整为全量前置直达锚点校准脚本
+- 新生成 `10_AutoCorrMultipath/calibrated_anchors.txt`，为每个 Click 保存 RMS 质心法得到的校准直达时间、锚点样本索引和采样率
+- 更新 `10_AutoCorrMultipath/batch_detect.py`，多径检测不再假设直达固定为窗口中心 5.0000ms，而是读取 `calibrated_anchors.txt` 中的校准锚点
+- 更新 `11_ChannelMetrics/calc_pulse_params.py`，信道参数计算使用 `all_pulse_times.txt` 第三列中的校准直达时间，按校准锚点计算 Delay_us、AmpRatio 和 Coherence
+- 更新 `multipath-detection-method.md` 与 `14/README.md`，说明当前流水线与正样本表统计
+
+### 关键指标与结果
+| 指标 | 值 |
+|------|-----|
+| 校准 Click 数 | 18116 |
+| 缺失锚点 | 0 |
+| 总 Click | 18116 |
+| 检出多径 Click | 10510 (58.0%) |
+| 孤立 Click | 7606 |
+| 多径总数 | 15373 |
+| 平均每 Click 多径数 | 0.85 |
+| `pulse_params.txt` 直达径行数 | 18116 |
+| `pulse_params.txt` 多径行数 | 15373 |
+| `pulse_params.txt` 数据行数 | 33489 |
+| AmpRatio<0.9 残留异常径 | 0 |
+
+### 输出文件
+- `10_AutoCorrMultipath/calibrated_anchors.txt`: 18116 行校准锚点记录
+- `10_AutoCorrMultipath/all_pulse_times.txt`: 已基于校准锚点重跑多径检测
+- `11_ChannelMetrics/pulse_params.txt`: 已基于校准直达时间重算信道参数
+- `11_ChannelMetrics/anomalous_ampratio_final.txt`: 残留 AmpRatio<0.9 异常径统计，当前为 0
+- `14/README.md`: 已记录同步正样本表的统计信息
+- `multipath-detection-method.md`: 已记录“先校准锚点，再检测多径，再计算信道参数”的当前方法
+
+### 上下游关系
+- 上游依赖：`09_Locate/PulseTrain_XXX/Click_YYY/Pulse_YYY.wav`
+- 当前流水线顺序：`09_Locate` → `11_ChannelMetrics/recalibrate_fix_v2.py` 生成锚点 → `10_AutoCorrMultipath/batch_detect.py` 检测多径 → `11_ChannelMetrics/calc_pulse_params.py` 计算信道参数
+- 下游用途：`14/` 正样本表、后续正负样本分类、混响/多径分析与方法文档均应使用本轮校准锚点后的 `pulse_params.txt`
+
+## 2026-07-21 — 15: Click 分段聚类 CSV 参数时序绘图脚本
+
+### 完成内容
+- 新建 `15/plot_csv_parameters_over_time.py`，用于读取 click 分段聚类 CSV，并绘制 RMS、归一化互相关峰值、谱质心、频谱带宽和 DBSCAN 原始标签随片段中心时间变化的图。
+- 默认输入为 `12_ClickSegmentClustering/outputs_100us/Pulse_027_segments_dbscan.csv`，输出为 `15/outputs/Pulse_027_parameters_over_time.png`。
+- 新增 `15/.gitignore`，忽略输出图、Matplotlib 缓存和 `__pycache__`。
+
+### 关键指标与结果
+- 运行环境：`D:\Python_env\toothwhale\python.exe`。
+- 输入 CSV 行数：99。
+- 时间范围：0.050 ms 到 9.918 ms。
+- DBSCAN 标签计数：`-1: 22`, `0: 44`, `1: 28`, `2: 5`。
+- 语法检查通过：`python -m py_compile 15/plot_csv_parameters_over_time.py`。
+
+### 上下游关系
+- 上游依赖：`12_ClickSegmentClustering` 生成的分段聚类 CSV。
+- 下游用途：用于快速检查分段参数时序变化和聚类标签在时间轴上的分布。

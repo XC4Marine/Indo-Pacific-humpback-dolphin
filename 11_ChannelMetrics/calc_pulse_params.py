@@ -22,21 +22,21 @@ LOCATE_DIR = BASE_DIR / "09_Locate"
 PULSE_TIMES_PATH = BASE_DIR / "10_AutoCorrMultipath" / "all_pulse_times.txt"
 OUTPUT_DIR = BASE_DIR / "11_ChannelMetrics"
 OUTPUT_PATH = OUTPUT_DIR / "pulse_params.txt"
+ANOMALY_OUT = OUTPUT_DIR / "anomalous_ampratio_final.txt"
 
 # ============================================================
 # 参数
 # ============================================================
 WINDOW_US = 50.0          # ±50μs 窗宽 (总共100μs)
-DIRECT_TIME_MS = 5.0       # 直达脉冲时间 (ms)
 MAX_LAG_MS = 5.0            # 最大多径延迟 (超过5ms的不纳入考虑)
 MAX_LAG_S = 4.99e-3         # 严格排除 >= 5.0ms 的边界伪影
 
 
 def parse_pulse_times(path):
-    """解析 all_pulse_times.txt，返回 [(train, click, [mp1, mp2, mp3]), ...]。
+    """解析 all_pulse_times.txt，返回 [(train, click, direct_ms, [mp1, mp2, mp3]), ...]。
 
-    每个元素: (pulse_train_name, click_name, [float_or_NaN, ...])
-    直达时间固定 5.0ms，因此不单独存储。
+    每个元素: (pulse_train_name, click_name, direct_ms, [float_or_NaN, ...])
+    all_pulse_times.txt 的第三列为前置校准后的直达时间。
     """
     records = []
     with open(path, "r", encoding="utf-8") as f:
@@ -47,13 +47,17 @@ def parse_pulse_times(path):
             parts = line.split("\t")
             train = parts[0]
             click = parts[1]
+            try:
+                direct_ms = float(parts[2])
+            except (ValueError, TypeError):
+                continue
             mp_times = []
             for val in parts[3:]:
                 try:
                     mp_times.append(float(val))
                 except (ValueError, TypeError):
                     pass
-            records.append((train, click, mp_times))
+            records.append((train, click, direct_ms, mp_times))
     return records
 
 
@@ -136,7 +140,7 @@ def extract_window(signal, center_s, fs, half_us=WINDOW_US):
 
 def main():
     print("=" * 60)
-    print("11_ChannelMetrics — 脉冲多径信道参数计算 (窗宽±25μs)")
+    print(f"11_ChannelMetrics — 脉冲多径信道参数计算 (窗宽±{WINDOW_US:.0f}μs)")
     print("=" * 60)
 
     # -------------------------------------------------------
@@ -148,8 +152,8 @@ def main():
 
     # 按 PulseTrain 分组
     train_groups = {}
-    for train, click, mp_times in records:
-        train_groups.setdefault(train, []).append((click, mp_times))
+    for train, click, direct_ms, mp_times in records:
+        train_groups.setdefault(train, []).append((click, direct_ms, mp_times))
     print(f"  共 {len(train_groups)} 个 PulseTrain")
 
     # -------------------------------------------------------
@@ -159,34 +163,34 @@ def main():
 
     # 收集缺失路径（该 click 存在但 wav 不存在）
     missing = []
-    # 存储: { (train, click): (signal_z, fs, mp_times) }
+    # 存储: { (train, click): (signal_z, fs, direct_ms, mp_times) }
     all_data = {}
 
     for train, entries in tqdm(train_groups.items(), desc="PulseTrain", unit="组"):
-        click_signals = []          # (click_name, signal, fs, mp_times)
-        for click, mp_times in entries:
+        click_signals = []          # (click_name, signal, fs, direct_ms, mp_times)
+        for click, direct_ms, mp_times in entries:
             wav_path = LOCATE_DIR / train / click / f"Pulse_{click.split('_')[1]}.wav"
             if not wav_path.exists():
                 missing.append(str(wav_path))
                 continue
             signal, fs = read_wav(wav_path)
-            click_signals.append((click, signal, fs, mp_times))
+            click_signals.append((click, signal, fs, direct_ms, mp_times))
 
         if not click_signals:
             continue
 
         # 收集该组所有采样点，计算 μ 和 σ
-        all_samples = np.concatenate([sig for _, sig, _, _ in click_signals])
+        all_samples = np.concatenate([sig for _, sig, _, _, _ in click_signals])
         mu = np.mean(all_samples)
         sigma = np.std(all_samples)
         if sigma == 0:
             sigma = 1e-12
 
         # 归一化并存储
-        for click, sig, fs_val, mp_times in click_signals:
+        for click, sig, fs_val, direct_ms, mp_times in click_signals:
             sig_z = (sig - mu) / sigma
 
-            all_data[(train, click)] = (sig_z, fs_val, mp_times)
+            all_data[(train, click)] = (sig_z, fs_val, direct_ms, mp_times)
 
     if missing:
         print(f"  警告: {len(missing)} 个 wav 文件缺失，已跳过")
@@ -200,14 +204,14 @@ def main():
     # -------------------------------------------------------
     # 3. 计算三个指标
     # -------------------------------------------------------
-    print("\n[3/4] 计算信道参数 (窗宽=±25μs)...")
+    print(f"\n[3/4] 计算信道参数 (窗宽=±{WINDOW_US:.0f}μs)...")
 
     output_rows = []
     pbar = tqdm(total=len(all_data), desc="计算", unit="click")
 
-    for (train, click), (sig_z, fs_val, mp_times) in all_data.items():
-        # 直达径 RMS（±25μs 窗，中心 5.0ms）
-        direct_center_s = DIRECT_TIME_MS / 1000.0
+    for (train, click), (sig_z, fs_val, direct_ms, mp_times) in all_data.items():
+        # 直达径 RMS（前置校准锚点 ±50μs 窗）
+        direct_center_s = direct_ms / 1000.0
         direct_rms = rms_in_window(sig_z, direct_center_s, fs_val)
 
         # ---- 直达径行 ----
@@ -225,7 +229,7 @@ def main():
             if mp_ms <= 0:
                 continue
             # >= 5.0ms 的边界伪影不纳入信道参数计算
-            mp_delay_ms = mp_ms - DIRECT_TIME_MS
+            mp_delay_ms = mp_ms - direct_ms
             if mp_delay_ms >= MAX_LAG_S * 1000.0:
                 continue
             mp_center_s = mp_ms / 1000.0
@@ -269,13 +273,30 @@ def main():
                 f"{row['coherence']:.6f}\n"
             )
 
+    residual_anomalies = [
+        row for row in output_rows
+        if row["path_type"].startswith("Multipath") and row["amp_ratio"] < 0.9
+    ]
+    with open(ANOMALY_OUT, "w", encoding="utf-8") as f:
+        f.write("# 前置锚点校准并完成多径检测后仍 AmpRatio < 0.9 的异常径\n")
+        f.write(f"# 异常径数: {len(residual_anomalies)}\n")
+        f.write("# PulseTrain\tClickName\tPathType\tDelay_us\tAmpRatio\tCoherence\n")
+        for row in residual_anomalies:
+            f.write(
+                f"{row['train']}\t{row['click']}\t{row['path_type']}\t"
+                f"{row['delay_us']:.2f}\t{row['amp_ratio']:.6f}\t"
+                f"{row['coherence']:.6f}\n"
+            )
+
     print(f"\n输出文件: {OUTPUT_PATH}")
+    print(f"异常文件: {ANOMALY_OUT}")
     print(f"总行数 (含表头): {len(output_rows) + 1}")
 
     # 统计
     direct_count = sum(1 for r in output_rows if r["path_type"] == "Direct")
     mp_count = len(output_rows) - direct_count
     print(f"直达径: {direct_count}  多径: {mp_count}")
+    print(f"AmpRatio<0.9 残留异常径: {len(residual_anomalies)}")
 
     print("\n" + "=" * 60)
     print("完成。")

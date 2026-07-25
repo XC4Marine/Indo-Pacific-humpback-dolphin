@@ -1,0 +1,3 @@
+outputs/
+.matplotlib/
+__pycache__/

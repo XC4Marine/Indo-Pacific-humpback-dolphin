@@ -12,6 +12,7 @@ BASE_DIR = Path(r"D:\Project_Github\Indo-Pacific-humpback-dolphin")
 LOCATE_DIR = BASE_DIR / "09_Locate"
 OUTPUT_DIR = BASE_DIR / "10_AutoCorrMultipath"
 TXT_PATH = OUTPUT_DIR / "all_pulse_times.txt"
+ANCHOR_PATH = OUTPUT_DIR / "calibrated_anchors.txt"
 
 # ── 参数 ──
 MIN_LAG_S = 0.1e-3           # 最小滞后 (避开直达峰)
@@ -22,7 +23,23 @@ MAX_LAG_S = 4.99e-3          # 严格排除 >= 5.0ms 的边界伪影
 MIN_ABS_COHERENCE = 0.02    # ??????????????????????
 FS = 576000                  # 采样率
 WINDOW_SAMPLES = 5761        # 窗口长度
-DIRECT_OFFSET_S = 5e-3       # 直达脉冲位于窗口中心 (+5ms)
+
+
+def load_anchors(path):
+    anchors = {}
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split("\t")
+            if len(parts) < 4:
+                continue
+            train, click = parts[0], parts[1]
+            direct_ms = float(parts[2])
+            anchor_sample = int(parts[3])
+            anchors[(train, click)] = (direct_ms, anchor_sample)
+    return anchors
 
 def autocorr(signal):
     n = len(signal)
@@ -86,13 +103,23 @@ def main():
         f_out.write("# 10_AutoCorrMultipath — 全量直达/多径脉冲时间\n")
         f_out.write(f"# 检测参数: threshold={THRESHOLD*100:.0f}%, min_lag={MIN_LAG_S*1e3:.2f}ms, max_lag={MAX_LAG_MS:.0f}ms, max_mp={MAX_MULTIPATH}\n")
         f_out.write("# 格式: PulseTrain  ClickName  直达时间(ms)  多径1时间(ms)  多径2...  多径3\n")
-        f_out.write("# 直达时间固定为 +5.0000ms (窗口中心)\n")
+        f_out.write(f"# 直达时间来自前置锚点校准: {ANCHOR_PATH}\n")
         f_out.write("#\n")
 
-        stats = {"total": 0, "has_mp": 0, "total_mp": 0}
+        anchors = load_anchors(ANCHOR_PATH)
+        stats = {"total": 0, "has_mp": 0, "total_mp": 0, "missing_anchor": 0}
 
         pbar = tqdm(total=total, desc="检测进度", unit="f", ncols=90)
         for wav_path in all_wavs:
+            pt = wav_path.parent.parent.name          # PulseTrain_XXX
+            cn = wav_path.parent.name                  # Click_YYY
+            anchor = anchors.get((pt, cn))
+            if anchor is None:
+                stats["missing_anchor"] += 1
+                pbar.update(1)
+                continue
+            direct_ms, direct_sample = anchor
+
             signal, fs = read_wav(wav_path)
             acf = autocorr(signal)
             pl, pv = detect_peaks(acf, np.arange(len(acf)), THRESHOLD, min_ls, MAX_MULTIPATH, fs)
@@ -106,7 +133,7 @@ def main():
                 n_sig = len(signal)
                 hw_s = 50e-6
                 hw_samples = max(1, int(round(hw_s * FS)))
-                direct_sample = len(signal) // 2  # ????
+                direct_sample = min(n_sig - 1, max(0, int(direct_sample)))
                 direct_start = max(0, direct_sample - hw_samples)
                 direct_end = min(n_sig, direct_sample + hw_samples + 1)
                 direct_win = signal[direct_start:direct_end]
@@ -125,10 +152,6 @@ def main():
                         coherence_filter.append(j)
                 pl = [pl[j] for j in coherence_filter]
                 pv = [pv[j] for j in coherence_filter]
-
-            pt = wav_path.parent.parent.name          # PulseTrain_XXX
-            cn = wav_path.parent.name                  # Click_YYY
-            direct_ms = DIRECT_OFFSET_S * 1000         # 5.0 ms
 
             # 多径时间 = 直达时间 + lag_offset
             mp_times_ms = [direct_ms + (l / fs) * 1000 for l in pl]
@@ -155,6 +178,7 @@ def main():
     print(f"  检出≥1个多径:    {stats['has_mp']}/{stats['total']} ({stats['has_mp']/stats['total']*100:.1f}%)")
     print(f"  多径总数:        {stats['total_mp']}")
     print(f"  平均每片段:      {stats['total_mp']/stats['total']:.2f}")
+    print(f"  缺失锚点:        {stats['missing_anchor']}")
     print(f"  耗时:            {elapsed:.1f}s")
     print(f"\n# 输出文件: {TXT_PATH}")
     print("=" * 70)
@@ -166,6 +190,7 @@ def main():
         f_out.write(f"# 检出≥1个多径: {stats['has_mp']}/{stats['total']} ({stats['has_mp']/stats['total']*100:.1f}%)\n")
         f_out.write(f"# 多径总数: {stats['total_mp']}\n")
         f_out.write(f"# 平均每片段: {stats['total_mp']/stats['total']:.2f}\n")
+        f_out.write(f"# 缺失锚点: {stats['missing_anchor']}\n")
 
 if __name__ == "__main__":
     main()

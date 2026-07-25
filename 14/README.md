@@ -16,6 +16,8 @@ D:\Project_Github\Indo-Pacific-humpback-dolphin\14\pulse_params.txt
 D:\Project_Github\Indo-Pacific-humpback-dolphin\11_ChannelMetrics\pulse_params.txt
 ```
 
+当前版本由前置 RMS 质心锚点校准后的信道参数表同步生成，并额外保留 `ClickClass` 标签列。
+
 负样本表：
 
 ```text
@@ -93,6 +95,17 @@ D:\Project_Github\Indo-Pacific-humpback-dolphin\13_Negative_Bandpass_20k_190k_No
 | `AmpRatio` | 直达声 RMS / 当前路径 RMS。 |
 | `Coherence` | 当前路径与直达声窗口的 Pearson 相干性。 |
 | `ClickClass` | click 级标签，`multipath` 表示该 click 有多径，`isolate` 表示只有直达声。 |
+
+当前正样本表统计：
+
+| 指标 | 数量 |
+| --- | --- |
+| click 总数 | 18116 |
+| `Direct` 行数 | 18116 |
+| `Multipath_*` 行数 | 15373 |
+| `multipath` click 数 | 10510 |
+| `isolate` click 数 | 7606 |
+| 表格总行数（不含表头） | 33489 |
 
 ### negative_samples_log.csv
 

@@ -29,17 +29,20 @@
 09_Locate/                       # 脉冲串定位（MATLAB→Python 迁移）
 10_AutoCorrMultipath/            # 多径检测 (ACF + Teager + Pearson三层过滤, 10%阈值, MAX=3)
 ├── autocorr_detect.py           # 100样本实验脚本
-├── batch_detect.py              # 全量批处理脚本
+├── batch_detect.py              # 全量批处理脚本，读取 calibrated_anchors.txt 作为直达锚点
+├── calibrated_anchors.txt       # RMS质心法前置校准锚点，18116条 Click 记录
 └── all_pulse_times.txt          # 18116 Click 直达/多径时间表
 11_ChannelMetrics/               # 信道参数计算与异常校准
-├── calc_pulse_params.py         # 信道参数计算 (Delay_us, AmpRatio, Coherence)
-├── recalibrate_fix_v2.py        # RMS质心法锚点校准脚本
-├── pulse_params.txt             # 33376行信道参数 (18116直达 + 15259多径)
+├── calc_pulse_params.py         # 基于校准直达时间计算 Delay_us, AmpRatio, Coherence
+├── recalibrate_fix_v2.py        # RMS质心法全量前置锚点校准脚本
+├── pulse_params.txt             # 33489行信道参数 (18116直达 + 15373多径)
 └── anomalous_ampratio_final.txt # AmpRatio<0.9 残留异常 (空)
 13_Negative/                     # 长录音 Hard Negatives 自动挖掘
 ├── masking.py                   # 读取 AllTrain.csv 并构建按原始录音编号分组的保护区间树
 ├── filtering.py                 # 带通滤波、TEO、频谱质心、ACF次峰与Pearson相干性校验
 └── mine_negatives.py            # 多进程文件级调度, 导出 negative_samples_log.csv 与 Negative_Samples/*.wav
+15/                              # 单个 click 分段聚类 CSV 可视化
+└── plot_csv_parameters_over_time.py # 绘制 RMS/互相关/谱质心/带宽/DBSCAN 标签随时间变化
 ```
 
 ## 数据特点
@@ -55,6 +58,7 @@
 | 野外数据 | Results.csv 包含日期/季节/经纬度/水深/海豚群体大小/行为 |
 | 负样本挖掘保护索引 | 13_Negative 默认使用 AllTrain.csv，覆盖 click、buzz、burst pulse 所在时段，避免将其误当噪声 |
 | 当前负样本预处理 | 20-190 kHz Butterworth 带通；不再使用 HFER 高低频能量比 |
+| 当前直达锚点 | 由 `10_AutoCorrMultipath/calibrated_anchors.txt` 提供，基于 ±50μs RMS 质心法全量前置校准 |
 
 ## 项目目标
 1. 从原始水听器录音中检测出海豚的 click 脉冲串
@@ -65,13 +69,21 @@
 
 ## 多径检测流水线 (10_AutoCorrMultipath + 11_ChannelMetrics)
 
-### 检测三层过滤
-1. **ACF 次峰初筛**: 归一化自相关, 10% 阈值, |lag|∈[0.1ms, 5ms], 最多 3 个
-2. **Teager 交叉验证** (仅实验脚本): Teager 能量 ≥ 全局最大值 0.1%
-3. **Pearson 相干性**: 直达窗与多径候窗的 Pearson r, |r| ≥ 0.02
+### 当前顺序
+1. `09_Locate` 输出每个 Click 的 ±5ms 片段
+2. `11_ChannelMetrics/recalibrate_fix_v2.py` 对 18116 个 Click 全量执行 ±50μs RMS 质心法，生成 `10_AutoCorrMultipath/calibrated_anchors.txt`
+3. `10_AutoCorrMultipath/batch_detect.py` 读取校准锚点，执行 ACF 次峰初筛与 Pearson 相干性过滤，生成 `all_pulse_times.txt`
+4. `11_ChannelMetrics/calc_pulse_params.py` 读取校准直达时间，重算 Delay_us、AmpRatio、Coherence，并输出残留 AmpRatio 异常明细
+
+### 检测与过滤步骤
+1. **前置锚点校准**: ±50μs RMS² 滑动窗取 argmax，作为每个 Click 的直达锚点
+2. **ACF 次峰初筛**: 归一化自相关, 10% 阈值, |lag|∈[0.1ms, 5ms], 最多 3 个
+3. **Teager 交叉验证** (仅实验脚本): Teager 能量 ≥ 全局最大值 0.1%
+4. **Pearson 相干性**: 直达窗与多径候窗的 Pearson r, |r| ≥ 0.02
 
 ### 锚点校准
-- RMS 质心法: 50μs 滑动窗 RMS² argmax 定位最优直达锚点
+- RMS 质心法已作为多径检测前置步骤，而不是只针对异常 AmpRatio 的后处理
+- 当前 `calibrated_anchors.txt` 覆盖 18116 个 Click，缺失锚点 0
 
 ### 信道三个参数
 - Delay_us: 多径相对直达延迟
@@ -82,8 +94,9 @@
 - Python 3.11.15 @ D:\Python_env\toothwhale\python.exe
 - 依赖：numpy, scipy, matplotlib, soundfile, pandas, tqdm, pathlib, intervaltree
 
-## 当前进度（2026-07-01）
+## 当前进度（2026-07-18）
 - [x] 01~09 模块：完成
-- [x] 10_AutoCorrMultipath: 三层过滤多径检测 (10%阈值, MAX=3), 10519/18116 Click 检出多径, 15259 多径
-- [x] 11_ChannelMetrics: 18116直达 + 15260多径信道参数, 355异常Click RMS质心校准完成, AmpRatio<0.9 → 0
+- [x] 10_AutoCorrMultipath: 前置 RMS 质心锚点校准后执行多径检测 (10%阈值, MAX=3), 10510/18116 Click 检出多径, 15373 多径, 缺失锚点 0
+- [x] 11_ChannelMetrics: 基于校准直达时间输出 18116 直达 + 15373 多径信道参数, AmpRatio<0.9 残留异常径 0
 - [x] 13_Negative: 长录音 Hard Negatives 自动挖掘完成，默认以 AllTrain.csv 构建排他保护带；当前推荐结果为 `13_Negative_Bandpass_20k_190k_NoHFER`，输出 90,580 个负样本，CSV 不含 HFER
+- [x] 15: 新增 click 分段聚类 CSV 参数时序绘图脚本，默认读取 `12_ClickSegmentClustering/outputs_100us/Pulse_027_segments_dbscan.csv`
