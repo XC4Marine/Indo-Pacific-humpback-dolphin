@@ -1,0 +1,652 @@
+                                                                  Applied Acoustics 206 (2023) 109301
+
+
+
+                                                             Contents lists available at ScienceDirect
+
+
+                                                                  Applied Acoustics
+                                           journal homepage: www.elsevier.com/locate/apacoust
+
+
+
+
+Reverberation suppression for detecting underwater moving target
+based on robust autoencoder
+Wenjie Xiang a,b,1, Zhongchang Song a,c,1, Wuyi Yang a,b,⇑, Hongquan Li a,b, Weijie Fu a,b, Yu Zhang a,b,⇑
+a
+  State Key Laboratory of Marine Environmental Science, College of Ocean and Earth Sciences, Xiamen University, Xiamen 361005, Fujian, China
+b
+  Key Laboratory of Underwater Acoustic Communication and Marine Information Technology of the Ministry of Education, College of Ocean and Earth Sciences, Xiamen
+University, Xiamen 361005, Fujian, China
+c
+  State Key Laboratory of Marine Environmental Science, College of the Environment and Ecology, Xiamen University, Xiamen 361005, Fujian, China
+
+
+
+a r t i c l e        i n f o                          a b s t r a c t
+
+Article history:                                      Reverberation constitutes the main background interference in underwater target detection, increasing
+Received 6 July 2022                                  the difficulty of extracting target echoes, particularly for moving targets. A robust autoencoder-based
+Received in revised form 14 January 2023              method was proposed to suppress reverberation and facilitate moving target detection. The overall
+Accepted 28 February 2023
+                                                      received data were decomposed into reverberation, ambient noise, and target echoes. Robust autoen-
+Available online 13 March 2023
+                                                      coder utilized a nonlinear representation, which can adaptively estimate and suppress the reverberation
+                                                      to effectively extract the target echoes. Connected component analysis was used to highlight the trajec-
+Keywords:
+                                                      tory of the target by splicing the echoes over continuous pings. Simulations were conducted to test the
+Reverberation suppression
+Robust autoencoder
+                                                      reliability of the robust autoencoder in highlighting target echoes, which was extended to analyze echoes
+Underwater target detection                           of a moving target from field experiments using an echosounder with an operating frequency of 38 kHz.
+                                                      Both simulation and field experimental results showed that the proposed method can effectively sup-
+                                                      press the reverberation and extract clean target echoes.
+                                                                                                                               Ó 2023 Published by Elsevier Ltd.
+
+
+
+
+1. Introduction                                                                         distinguish the target echo from reverberation in either the time or
+                                                                                        frequency domains [5]. The irregularity of the sea surface can lead
+    Active acoustic monitoring is a common method applied to                            to additional reverberations, further reducing the sonar detection
+underwater target detection and recognition [1,2]. However, target                      performance [6,7]. Therefore, suppressing the interference of
+echoes are accompanied by strong reverberation interference at                          reverberation is the key to improving the detection performance.
+the reception terminal, resulting in additional challenges in suc-                         Traditional methods for reverberation suppression focus on the
+cessfully distinguishing targets from background noise and rever-                       mapping of feature subspace. The differences between the rever-
+berations [3], which can adversely affect the performance of                            beration and target echoes were examined in the Doppler space
+man-made sonar in underwater target detection. Reverberation is                         [8,9], discrete wavelet [10], and fractional Fourier domains
+attributed to the random scattering from the sea surface, seabed,                       [11,12], which provided important features for reverberation
+and seawater, and it constitutes the main background interference                       reduction and facilitate target detection. Particularly for moving
+in shallow waters [3,4], making it challenging to use active sonar to                   targets, the suppression of reverberation can be achieved by target
+                                                                                        tracking [13,14]. However, the performance of these methods is
+                                                                                        poor under low signal-to-reverberation ratio (SRR) scenarios [15].
+    Abbreviations: ADMM, Alternate direction multiplier methods; AE, Autoen-            Low-rank and sparsity theories, developed a decade ago [16–18],
+coder; CCA, Connected component analysis; ESE, Excess of echo strength; GPS,            have been widely used in image processing for background model-
+Global Position System; NESR, Noise-echo-strength ratio; RAE, Robust autoencoder;       ing [19], camera calibration [20] and optical character recognition
+RPCA, Robust principal component analysis; SC, Sparse coefficient; SE, Strength
+excess; SIR, Signal-to-interference ratio; SRR, Signal-to-reverberation ratio.
+                                                                                        [21]. This method has been introduced into underwater acoustic
+  ⇑ Corresponding authors at: Key Laboratory of Underwater Acoustic Communi-            engineering for reverberation suppression and target detection
+cation and Marine Information Technology of the Ministry of Education, College of       [22–24]. For a fixed-position active sonar, the signal received from
+Ocean and Earth Sciences, Xiamen University, Xiamen 361005, Fujian, China.              multiple pings exhibits considerable stationarity. When the echo
+    E-mail addresses: wyyang@xmu.edu.cn (W. Yang), yuzhang@xmu.edu.cn                   data received from a single ping are considered as a frame,
+(Y. Zhang).
+  1
+    These authors contributed equally to this work.
+                                                                                        multiple frames can be constructed as a matrix over time, and it
+
+https://doi.org/10.1016/j.apacoust.2023.109301
+0003-682X/Ó 2023 Published by Elsevier Ltd.
+W. Xiang, Z. Song, W. Yang et al.                                                                                   Applied Acoustics 206 (2023) 109301
+
+
+is plausible to resolve the matrix into dynamic and steady compo-           change rapidly over frames covering the target. Thus, the data
+nents [15]. The steady components exhibit similar strength distri-          sequence in X can be modeled as the sum of target echoes of inter-
+butions over time and can be regarded as a low-rank matrix                  est and the background reverberation
+[25,26]. The dynamic components, comprising reverberation fluc-
+                                                                            X ¼ L þ S;                                                             ð2Þ
+tuations and target echoes [27], can be regarded as a sparse matrix.
+Therefore, reverberation suppression methods based on low-rank              where L 2 R        MN
+                                                                                             represents the coherent part of the data and
+and sparse matrix decomposition were proposed accordingly,                  S 2 RMN represents the incoherent part of the data. Evidently, L is
+including non-negative matrix factorization [4], principal compo-           a low-rank matrix that represents the steady components, and S
+nent analysis [28], and robust principal component analysis (RPCA)          is a sparse matrix representing the dynamic components. This
+[29,30]. In terms of heavy matrix decomposition, alternative meth-          decomposition is known as RPCA [19,30], in which the objective
+ods have been developed to accelerate the process using an accel-           function is
+erated proximal gradient [5], the augmented Lagrange multiplier,
+and alternate direction multiplier methods (ADMM) [12,15]. Zhu              min kLk þ kkSk1
+                                                                              L;S
+et al. [25] decomposed the received data through low-rank and                                                                                      ð3Þ
+                                                                            Subject to kX  L  Sk2F ¼ 0;
+sparse matrix estimation and improved the robustness of the
+reverberation suppression.                                                  where k  k denotes the nuclear norm (i.e., the sum of the singular
+    The low-rank matrices estimated by the methods mentioned                values of the matrix), k  k1 is the L1 norm (i.e., the sum of the abso-
+above were all presented in the linear space, and it may be more            lute values of the entries) [26], and k represents the trade-off
+appropriate to estimate the steady component in nonlinear space             between kLk and kSk1 . kLk is a convex surrogate for the rank con-
+for the actual water environment. The development of deep learn-            straint, and kSk1 is used for full matrix sparsity [16]. k  kF denotes
+ing has driven rapid progress in several fields, and here we focus on                                                              qﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+autoencoders (AEs) [31] based on nonlinear representations of               the matrix Frobenius norm. For instance, kXkF ¼ trðXT XÞ, where
+input features. AEs can project data into a low-dimensional space,          trðÞ denotes the trace of a matrix. The target components can be
+providing the nonlinear estimation of the steady components. Out-           separated from the reverberation by matrix decomposition. How-
+liers or noise can reduce the representation performance of the             ever, in an actual underwater acoustic environment, the reverbera-
+AEs. Combined with the anomaly detection capability of RPCA,                tion caused by an irregular water surface and underwater scatters
+the robust autoencoder (RAE) model [32] was proposed to isolate             (e.g., marine life) are time-varying and irrelevant. In this case, it is
+noise and outliers in the input data, which had good robustness.            difficult to accurately estimate the target components through
+    In this study, we proposed a method of reverberation suppres-           sparse components. Therefore, in an actual underwater acoustic
+sion to detect a moving target based on RAE to extract clear target         environment, the dynamic components S in Eq. (2) can be decom-
+echo trajectories. Referring to the low-rank and sparsity theories,         posed into D and G, and the rational decomposition of data X can
+we extended the RAE model to solve the underwater reverberation             be extended as
+suppression problem. First, we used AEs to project high-                    X¼LþDþG                                                                ð4Þ
+dimensional data into a low-dimensional space to extract the
+steady components through nonlinear estimation. The dynamic                 where D 2 RMN represents target echoes, and G 2 RMN is the inter-
+components were then obtained by removing the steady compo-                 ference comprising the incoherent part of the reverberation and
+nents from the overall data. Furthermore, the target echoes were            noise. The solution to Eq. (4) can be obtained by different methods
+extracted from the dynamic components using the sparse repre-               [34,35]. One uses convex relaxation of the rank and sparsity con-
+sentation. Finally, the target trajectory was successfully high-            straints and seeks L and S to minimize [22]
+lighted from the multi-ping data over continuous frames using
+                                                                            minfkX  L  Sk2F þ kLk þ kkSk1 g                                     ð5Þ
+connected component analysis (CCA) [33].                                     L;S
+    The rest of this paper is organized as follows. In Section 2, the
+                                                                               After the decomposition of the above equation, most of the
+implementation framework of reverberation suppression based
+                                                                            energy from the reverberations can be removed as the coherent
+on low-rank and sparsity theories is introduced. Section 3 presents
+                                                                            part, with the remaining energy associated with interference.
+the RAE model and proposed reverberation suppression method
+                                                                            Therefore, D is obtained from S using the following threshold
+using RAE. Section 4 evaluates our method using the simulation
+                                                                            calculation:
+data. In Section 5, based on the field data, the performance of the
+proposed method is analyzed and compared with the RPCA                      D ¼ THe ½S                                                            ð6Þ
+method. Section 6 summarizes the conclusions of this study and
+                                                                            which can be computed by
+outlines possible future research directions.
+                                                                                    
+                                                                                        sij   sij  e
+                                                                            dij ¼                                                                  ð7Þ
+                                                                                        0     sij < e
+2. Theoretical analysis of reverberation suppression
+                                                                            where sij and dij denote the ith row and jth column entries of S and
+   Considering that the same pulse is repeatedly transmitted, we            D, respectively, and e is the threshold. Thus, we have
+can define a column vector xi 2 RM1 ði ¼ 1; :::NÞ to represent the         G ¼ S  D:                                                             ð8Þ
+echo of the ith pulse, where M represents the dimension in the
+range direction, and xi is called the ith frame of data. The multi-
+                                                                            3. Application of RAE to reduce reverberation and acquire target
+frame data can be represented in terms of a matrix X 2 RMN :
+                                                                            trajectory
+X ¼ ½x1 ; x2 ;    xN                                         ð1Þ
+                                                                            3.1. RAE
+   For a stable underwater acoustic environment, there is a high
+correlation between background reverberations from different                   Inspired by RPCA [36,37], the RAE [32] augments a filter layer
+frames in terms of their energy [26]. The energy distribution of            based on the AEs. The filter culls out the anomalous parts of the
+the moving target echoes is sparse and uncorrelated and can                 data that are difficult to reconstruct, and the remaining portion
+                                                                        2
+W. Xiang, Z. Song, W. Yang et al.                                                                                                                          Applied Acoustics 206 (2023) 109301
+
+
+can be represented by the compressed low-dimensional data with                                is f Lk , k ¼ 1; 2;    ; L  1. The number of output nodes of the last
+a small reconstruction error. An AE is an unsupervised trained neu-                           fully connected layer is M, and / contains the parameters of the
+ral network consisting of two networks: an encoding network and                               weight matrices and offset vectors of the L fully connected layers.
+a decoding network. The encoding network converts the input x                                 Except for the last layer of the decoding network, the rectified lin-
+into a low-dimensional representation z, z ¼ Eh ðxÞ, where E is                               ear unit functions [38] were selected as the activation functions for
+the coding mapping and h is the coding network parameter. The                                 each layer of the AE.
+decoding network recovers the input data from the encoding z,                                     Inspired by the ADMM, the objective in Eq. (13) is split into two
+x0 ¼ D£ ðzÞ ¼ D£ ðEh ðxÞÞ, where D is the decoding mapping, £ is                              independent pieces, kli  D£ ðEh ðli ÞÞk2 and ksi k1 . One was optimized
+the decoding network parameter, and x0 is the restored version                                while keeping the other pieces fixed. Specifically, by fixing si , AE is
+of the input x. When training E and D to minimize the difference                              trained with li ¼ x0i  si by minimizing the following objective
+between x and x0, the objective function is as follows:                                       function:
+minh;£ kx  D£ ðEh ðxÞÞk                                                           ð9Þ                   XN
+                                                                                              minh;£          i¼1
+                                                                                                                    kli  D£ ðEh ðli ÞÞk2                                               ð14Þ
+where k  k is commonly chosen as the L2 norm. In RAE, x is also split
+                                                                                                  In the first iteration, si is a zero vector and the input of the
+into two parts, x = l + s, where l represents the part of the input
+                                                                                              autoencoder is x0i . After training, D£ ðEh ðli ÞÞ can represent the steady
+data that is well represented by the autoencoder, and S contains
+                                                                                              component of the ith ping estimated by the AE, and li is updated as
+noise and outliers that are difficult to reconstruct. The AE can per-
+                                                                                              li ¼ D£ ðEh ðli ÞÞ.
+fectly reconstruct the low-dimensional manifold l by removing
+noise and outliers from x. Therefore, the optimization problem of                                 We used a proximal gradient to minimize the penalty term
+                                                                                              PN
+the RAE is                                                                                       i¼1 ksi k1 with li fixed. The L1 norm can be efficiently optimized
+                                                                                              using a soft-threshold proximal method [39,40] as follows:
+minh;£ kl  D£ ðEh ðlÞÞk2 þ kksk1                                                                           8
+                                                                                 ð10Þ
+Subject to x  l  s ¼ 0:                                                                                   < xi  k; xi > k
+                                                                                                            >
+                                                                                              Gk;L1 ðxi Þ ¼   xi þ k; xi < k                                                            ð15Þ
+s contains noise and outliers that are difficult to represent using the                                     >
+                                                                                                            :
+                                                                                                              0; xi 2 ½k; k:
+AE D£ ðEh ðÞÞ, and k is an adjustable parameter that tunes the spar-
+sity of s. A small k encourages much of the data to be isolated into s                            This function is known as a shrinkage operator in L1 optimiza-
+as outliers, thereby minimizing the reconstruction error of the AE.                           tion problems. Gk;L1 denotes the soft-thresholding operator for
+By contrast, a large k discourages the data from being isolated into                          the elements of xi , and k is the soft-threshold. k can be adaptively
+s as outliers, which increases the reconstruction error of the AE.                            selected according to the average strength and standard deviation
+Therefore, we can tune k depending on the desired use of RAE.                                 of the dynamic components, defined as
+                                                                                                         rﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+                                                                                                               1 XN
+3.2. Reverberation suppression                                                                kj ¼ mj þ a                          ðsji  mj Þ2                                         ð16Þ
+                                                                                                          N1                 i¼1
+
+    The purpose of reverberation suppression is to better detect tar-
+                                                                                                       1 XN
+gets [15]. Because target echoes are part of the dynamic compo-                               mj ¼           s
+                                                                                                          i¼1 ji
+                                                                                                                                                                                        ð17Þ
+                                                                                                       N
+nents, the sparse matrix S needs to be successfully extracted.
+Considering that the echo strengths of each range were similar in                             Here, sji is the dynamic background for location j and the ith ping
+different time frames, we calculated the mean normalization xi 0                              (i ¼ 1; 2;    ; N, j ¼ 1; 2;    ; M), and a is an adjustable parameter
+for the input data, and xi , of the ith ping using the formula:                               that controls the degree of the strength fluctuation. To extract the
+                                                                                             target echo from si , we have
+xi 0 ¼ xi  x                                                                    ð11Þ
+                                                                                              di ¼ Gk;L1 ðsi Þ                                                                          ð18Þ
+where
+                                                                                              where di denotes the target echo component of the ith ping, and
+  1 XN                                                                                       D ¼ ½d1 ; d2 ;    ; dN . An algorithm flow chart of the proposed method
+x¼       x
+      i¼1 i
+                                                                                 ð12Þ
+   N                                                                                          is presented in Table 1.
+    The normalized echo signal X0 ¼ ½x01 ; x02 ;    x0N  was divided into
+two parts: L ¼ ½l1 ; l2 ;    ; lN  and S ¼ ½s1 ; s2 ;    ; sN , where li and si       3.3. Moving target trajectory extraction and enhancement
+denote the steady component and dynamic components of the
+ith ping, respectively, and x0i ¼ li þ si . li is projected into the low-                        For moving targets, the RAE has extracted accurate target
+dimensional space through the encoding network of the AE with                                 echoes of each range. However, the target echoes may be interfered
+si fixed, and then the steady component D£ ðEh ðli ÞÞ is obtained                             with by strong scattering at some locations. To highlight the target
+through the decoding network. The dynamic component si can                                    echoes, the CCA method [33,41,42] can be applied to reduce ran-
+be obtained using si ¼ x0i  li . As a result, Eq. (5) can be rewritten                       dom strong scattering by using the continuity of the moving target
+                                                                                              locations along with the time frames.
+as follows:
+                                                                                                 For the input data xi of the ith ping, the echoes of the moving
+     XN                   2        XN                            XN                                                                                                                T
+min f i¼1 kx0i  li  si k þ minh;£ i¼1 kli  D£ ðEh ðli ÞÞk2 þ k i¼1 ksi k1 g                targets were estimated as di , where di ¼ ½d1i ; d2i ;    ; dMi  2 RM1 ,
+li ;si                     F
+                                                                                              i ¼ 1; 2;    ; N. By setting the hard threshold Th0 to the entries in
+                                                                                 ð13Þ         di , we obtain
+   The encoding network Eh ðÞ of the AE is composed of L fully con-                                   
+                                                                                                           dki ; dki > Th0
+nected layers; f k is the number of output nodes of the kth fully con-                        oki ¼                             ; k ¼ 1; 2;    ; M:                                  ð19Þ
+                                                                                                            0; dki < Th0
+nected layer, where k ¼ 1; 2;    ; L, f k is the dimension of the low-
+dimensional representation, and h contains the parameters of the                              Here, Th0 is a non-negative value to highlight the target echoes. A
+weight matrices and offset vectors of the L fully connected layers.                           non-zero oki denotes the location of a moving target; otherwise,
+The decoding network D£ ðÞ is also composed of L fully connected                             there are no moving targets. o1 ; o2 ;    ; oN are combined to form a
+layers; the number of output nodes of the kth fully connected layer                           two-dimensional image:
+                                                                                          3
+W. Xiang, Z. Song, W. Yang et al.                                                                                               Applied Acoustics 206 (2023) 109301
+
+
+Table 1                                                                                 3.4.2. Strength excess and noise-echo-strength ratios
+Proposed algorithm of reverberation suppression based on RAE.                              The essential purpose of reverberation suppression is to detect
+   Inputs: X 2 RMN as in Eq. (1), k, e;                                                the target echo signal from existing reverberation. To evaluate the
+      1: Begin;                                                                         performance of the reverberation suppression, we measure the ESE
+      2: Initialize L 2 RMN , S 2 RMN to be zero matrices, L þ S ¼ X, LD ¼ X,         and NESR.
+      and an autoencoder D£ ðEh ðÞÞ with randomly initialized parameters.                 ESE demonstrates the excess of echo strength, which is the dif-
+      3: While true do,
+                                                                                        ference between the real target echo strength and the reverbera-
+      4: Compute L: L ¼ X  S;
+                                                 P                                      tion background strength. The definition of ESE is expressed as
+      5: Minimize the first term in Eq. (14): N    i¼1 kli  D£ ðEh ðli ÞÞk2 ;
+      6: Set L to be the reconstruction from the trained autoencoder:
+                                                                                        ESE ¼ aveðEStar Þ  aveðESnoi Þ                                      ð22Þ
+      L ¼ D£ ðEh ðLÞÞ;
+      7: Compute S using Eq. (10): S ¼ X  L;
+                                                                                        where EStar denotes the echo strength of a ping in the area where
+      8: Optimize S using a proximal operator: S ¼ Gk;L1 ðSÞ;
+      9: Check the convergence condition that L and S are close to the input X          the target signal is located, and ESnoi denotes the echo strength in
+      thereby satisfying the constraint: c1 ¼ kX  L  Sk2F =kXk2 ;                     the area where there is no target. aveðEStar Þ and aveðESnoi Þ denote
+      10: Check the convergence condition that L and S have converged to a              the mean values of EStar and ESnoi , respectively. The larger the ESE,
+      fixed point: c2 ¼ kLD  L  Sk2F =kXk2 ;                                          the better the reverberation suppression effect of the algorithm.
+      11:      If c1 < e or c2 < e, then                                                   NESR demonstrates the proportion of the degree of noise fluctu-
+      12:         break;                                                                ation in the target signal, which can be considered as the inverse of
+      13:         Else, update LD for convergence checking in the next
+      iteration:LD ¼ L þ S.
+                                                                                        the signal-to-interference ratio (SIR) [26]. NESR is defined as the
+      14:      End if                                                                   ratio of the standard deviation of ESnoi to the standard deviation
+      15: End while                                                                     of EStar , expressed as
+      16: G ¼ X  L  S, D ¼ S ;
+      Outputs:D 2 RMN as in Eq. (4);                                                            SDðESnoi Þ
+                                                                                        NESR ¼                                                               ð23Þ
+                                                                                                 SDðEStar Þ
+where e is the tolerate level for the reconstruction error at convergence.
+
+                                                                                        where SDðEStar Þ denotes the standard deviation of EStar and SDðESnoi Þ
+                                                                                        denotes the standard deviation of EStar . Compared with SIR, NESR
+O ¼ ½o1 ; o2 ;    ; oN                                                   ð20Þ
+                                                                                        can measure the removal of reverberation more effectively, which
+                                                                                        avoids the situation where SDðESnoi Þ is zero. The smaller the value
+where oi ¼ ½o1i ; o2i ;    ; oMi T and O is an M  N matrix. In image O,            of NESR, the smaller is the ratio of the reverberation strength to
+the moving targets appear as non-zero connected components. If                          the target echo strength, and the more the reverberation is reduced.
+two points oki and olj in O are non-zero, jjk  ljj  Thr , and                         An excellent reverberation suppression method can maximize the
+jji  jjj  Thc , the two points are considered to belong to the same                   ESE and reduce the NESR for a given combination of sonar system
+connected component, where Thr and Thc are the thresholds in time                       parameters and environmental conditions.
+and distance, respectively. The larger Thr and Thc , the greater the
+details of the target echoes extracted along the time and space
+                                                                                        4. Simulation
+domains. The intermittent highlight target echoes can also be
+extracted; however, they are mixed with strong reverberation fluc-
+                                                                                        4.1. Reverberation suppression and moving target trajectory
+tuations. In contrast, small Thr and Thc prevent most of the rever-
+                                                                                        extraction
+beration fluctuations from being misjudged as target echoes but
+may cause the loss of weak echoes.
+                                                                                           We simulated the process of a moving target with a constant
+                                                                                        velocity, with velocities 0.2 and 0.05 m/s along the x-axis and y-
+3.4. Evaluation of reverberation suppression performance                                axis, respectively. In our simulation, the coordinates of the initial
+                                                                                        target position and T-R platform were (5 m, 0 m) and (0 m, 0 m),
+   To evaluate the reverberation suppression performance of the                         and observation time was 360 s. The simulated target trajectory
+proposed matrix decomposition method, three parameters were                             and target detection range process are shown in Fig. 1(a) and (b).
+proposed in this paper: the sparse coefficient (SC), strength excess                    The transmitted signal was a pulse signal with a 38-kHz center fre-
+(SE), and noise-echo-strength ratio (NESR).                                             quency, 0.4-ms pulse width, and 0.4-s period width. Reverberation
+                                                                                        is modeled as a linear superposition of the scattering echoes of
+                                                                                        incident sound waves due to many underwater scatterers
+3.4.1. Sparse coefficient                                                               [43,44]. To construct the situation in the field through simulation,
+   An interesting portion of reverberation suppression is per-                          a mathematical model of the reverberation was built based on the
+formed by the sparse matrix D, which contains the target echo sig-                      data we measured in the ocean. An active sonar was used to emit
+nal. Therefore, the mathematical properties of the matrix D largely                     signals of 38 kHz in the field experiments conducted in water with
+determine the degree of reduction to the reverberation. The prop-                       a depth of 16 m, and the transmitter and receiver were both placed
+erties of the matrix D can be evaluated using its SC [15]. A higher                     2 m underwater. The sound speed was set as 1510 m/s at 2 m and
+sparsity implies larger coefficients, which further implies that                        1507 m/s at the ocean floor, which were measured by a CTD (Con-
+there are a large number of zero entries. In our study, we focus                        ductivity, Temperature and Depth, CastAway-CTD, SonTek, USA) in
+on the SC of the column vector of the matrix D and define it as                         the field. Using these settings, the reverberation model was built
+                                                                                        by incorporating the echoes of the moving target on the back-
+              Ndi ðr0 Þ                                                                 ground with a SRR of 5 dB. As a result, we obtained 900 pings of
+SC i ¼ 1                                                                    ð21Þ
+                M                                                                       moving target echo signals, and the number of sampling points
+                                                                                        for each ping was 11104. The echo signal of each ping is taken as
+where Ndi ðr0 Þ denotes the total number of absolute values of                          a column vector and arranged together by time frames to generate
+entries in the di greater than r0 . The SC i mainly originates from                     a signal matrix of 11104  900, as shown in Fig. 1(c). In shallow
+the target echo and some strong scatterings; the greater the value                      waters, surface and floor interference originating from multipath
+of SC i , the weaker the intensity of strong scatterings.                               propagation can potentially distort the transmitted signals, which
+                                                                                    4
+W. Xiang, Z. Song, W. Yang et al.                                                                                                       Applied Acoustics 206 (2023) 109301
+
+
+
+
+Fig. 1. Simulation data generation and the decomposition to the primal data of all pings by the proposed method and the RPCA method; the target echo signal shows in a
+white ellipse. (a) Target trajectory and T-R position. (b) Range process. (c) Target echo signal superimposed with real ocean reverberation background. (d) Normalized signal
+of (c). (e) Steady components estimated by the RPCA method. (f) Target echo components estimated by the RPCA method. (g) Other noise components estimated by the
+proposed method. (h) Steady components estimated by the proposed method. (i) Target echo components estimated by the proposed method.
+
+
+
+went back to the receiver as target echoes. In this paper, we only                       shown in Fig. 1(e) and (h), showing no notable target echoes; how-
+considered the spreading loss of the signal. Therefore, we referred                      ever, the range of the strength values of the steady components
+to the active sonar equation to compensate for the propagation loss                      estimated by the proposed method (-15 to 15 dB) is larger than
+and the modified signals in the subsequent simulations.                                  that estimated by RPCA (-0.5 to 0.5 dB). The reduction of more
+    The simulation was performed on a computer with an Intel Core                        steady components could be beneficial for the estimation of the
+i7 CPU, a 64 GB DDR4 RAM hardware platform, and a PyCharm                                target echoes. The target echo components estimated by the RPCA
+software platform. The encoding network of the AE comprised an                           method and the proposed method are shown in Fig. 1(f) and (i).
+input layer of 11104 nodes, and two fully-connected layers, con-                         Most of the steady and noise components have been suppressed,
+taining 256 and 70 nodes, respectively. The decoding network cor-                        and the trajectory of the moving target (circled in white) can be
+respondingly comprised an input layer and two fully connected                            seen. The target echo components estimated in our method though
+layers. We used the TensorFlow library to construct the AE and                           slightly weaker than those estimated by RPCA method, predicts a
+Adam optimizer [45] to learn the network parameters based on                             clear target trajectory.
+Eq. (13). The learning rate and batch size were set as 0.001, and                            To indicate the sparsity of the target echo components and the
+128 to initialize the autoencoder. All data samples were trained                         continuity of the target trajectory estimated by our method, 31
+to learn the network parameters, and the low-rank matrix was                             pings from the 300th to the 330th pings in the echo components
+reconstructed based on Eq. (14). During training, batch normaliza-                       estimated by RAE are shown in Fig. 2. The target echo component
+tion [46] was used to accelerate network training. Other parame-                         of the 300th ping is presented in Fig. 2(a), and it is easy to identify
+ters that were used included a ¼ 2 and e ¼ 1  107 , which were                         the target location. The target components from the 300th to the
+determined either by the test or reference to a previous paper                           330th pings are superimposed, and the target locations are marked
+[32]. Thus, the target echo components D is obtained. To evaluate                        with ‘‘*”, as shown in Fig. 2(b). The marked target locations were
+the computational performance of the proposed algorithm, the                             continuous over the time frames; based on this, the target trajec-
+time processing the data was calculated, resulting in a consump-                         tory can be extracted using CCA. RAE has precisely extracted the
+tion time of 229.41 s for an input matrix size of 11104  900                            target trajectory, so Th0 was set as zero to highlight the target
+and 0.255 s for each ping.                                                               echoes in our simulation. Since Thr and Thc are the gate thresholds
+     To verify the effectiveness of the reverberation suppression by                     of time and range, respectively, for a higher target trajectory detec-
+the proposed method, the RPCA [29] and proposed method were                              tion probability, Thr and Thc were set to 20 and 50.
+applied to the simulation data, the results are shown in Fig. 1(d)-                          Threshold-based normalization was also applied to the dynamic
+(i). Fig. 1(d) shows the normalization result of the initial simulation                  components estimated by the RPCA method, and the result is
+data. The steady components extracted by the two methods are                             shown in Fig. 3(a). To some extent, the reverberation is
+
+                                                                                     5
+W. Xiang, Z. Song, W. Yang et al.                                                                                                     Applied Acoustics 206 (2023) 109301
+
+
+suppressed; however, there are still significant reverberation fluc-                    value of SC by the proposed method is approximately 0.98,
+tuations. By setting the hard threshold Th0 to the entries of the tar-                  whereas that by the RPCA method is 0.47, which suggests a great
+get echo components estimated by RAE, the result can be seen in                         sparsity of the proposed method.
+Fig. 3(b). Fig. 3(c) shows the result for the CCA, and the target                          B. Strength excess and noise-echo-strength ratios. In steady
+trajectory is shown as a white circle. Owing to the sparsity of the                     waters, the environment changes slowly over a short period or
+target echo component itself, a greater sparsity is obtained.                           short range. Therefore, it is reasonable to assume that the back-
+                                                                                        ground reverberation received from each ping is stable within
+4.2. Evaluation                                                                         the range of 2 m. We choose to calculate EStar and ESnoi within a
+                                                                                        range of 2 m centered on the target. The average values of ESE
+    A. Sparse coefficient. Let r0 in Eq. (21) be 3, the SC of the target                and NESR of all pings for different matrices estimated by the two
+echo components by the proposed method and RPCA method is                               methods are shown in Fig. 4(b) and (c), where MNS represents
+shown in Fig. 4(a). The SC in all pings using the proposed method                       the mean-normalized signal matrix and S_RAE represents the
+is greater than those obtained using the RPCA method. The average                       dynamic component matrix, that is S in Eq. (3); D_RPCA and
+
+
+
+
+Fig. 2. Target echo components for the 300th to 330th pings; the target echo is marked with ‘*’. (a) Signal of the 300th ping shows a higher sparsity of the target echo
+component. (b) Target echo components for the 300th to 330th pings show the continuity of target locations.
+
+
+
+
+Fig. 3. Moving target echo components extracted by the proposed method and the RPCA method; the target trajectory is shown in a white ellipse. (a) Target echo components
+obtained by thresholding the dynamic component of the RPCA method [Fig. 1(f)]. (b) Target echo components obtained by setting the hard threshold Th0 ¼ 0 to the target
+echo components of RAE [Fig. 1(i)]. (c) Target trajectory estimated by CCA of the proposed method.
+
+
+
+
+Fig. 4. SC, the average ESE, and NESR in all pings by the proposed method and RPCA method. (a) SC of the two methods. (b) ESE of different matrices. (c) NESR of different
+matrices.
+
+                                                                                    6
+W. Xiang, Z. Song, W. Yang et al.                                                                                                       Applied Acoustics 206 (2023) 109301
+
+
+D_RAE represent the target echo components using the RPCA and                            5. Field experiments
+RAE methods, respectively. The ESE of S_RAE is 0.03 dB higher than
+that of MNS, while the ESE of D_RPCA is 0.19 dB lower than that of                       5.1. Field data collection
+MNS, meaning that the dynamic components estimated by the pro-
+posed method do not damage the target echo strength, which is                               We formulated and tested the proposed reverberation suppres-
+more beneficial to the estimation of the target echo components.                         sion method for moving-target detection on an acoustic field data-
+Note that the NESR of the target echo components estimated by                            set. The test was conducted at the experimental station of Beixi
+the proposed method is 18.2% lower than that of the MNS, whereas                         Shuizha on the Jiulong River, a freshwater lake located in Zhangz-
+that of the RPCA method is 0.79% lower [Fig. 4(c)]. NESR of the tar-                     hou, Fujian province, China. The lake has a water depth of 15–20 m
+get components estimated by the proposed method is reduced by                            and an underwater sound speed of approximately 1481 m/s. The
+51.28% compared with that of the MNS, while that of the RPCA                             experimental configuration is shown in Fig. 6(a). Acoustic detec-
+method is only reduced by 2.23%. In summary, the proposed                                tion was conducted using a DT-X echosounder [47] (BioSonics,
+method has removed most of the reverberation, while there are                            USA). During data collection, the echosounder was fixed at a depth
+many reverberation fluctuations in the target components esti-                           of 7 m, and the target (a 40 cm hollow ball) was hung at the same
+mated by the RPCA.                                                                       depth and dragged by a receding boat at a speed of approximately
+   To evaluate the effect of SRR on method performance, addi-                            1 m/s. The transmitting waveform was a pulse of 0.4 ms with a
+tional simulations with SRR ranging from 15 to 30 dB, with a                            center frequency of 38 kHz. Active detection was performed at
+step of 5 dB were run to calculate the average SC, NESR, and                             intervals of 330 s and a ping length of 0.4 ms. The built-in high-
+ESE. The SC of the proposed method is relatively stable and higher                       performance touchscreen computer was used to control the recep-
+than that of the RPCA method, suggesting that the target compo-                          tion and recording of the collected acoustic data, with a sampling
+nents have a higher sparsity in our dataset. NESR represents the                         rate of 41 kHz. The echoes received were analyzed and saved using
+strength ratio of noise to target echo signal and when the SRR is                        a third-party software EchoView [Fig. 6(c)]. Finally, echo strength
+15 dB, the NESR is higher than 100%, which means the strength                           images marked with the number of pings and the target ranges
+of the noise is greater than that of the target echo signal. In this                     were obtained. A total of 825 pings of target echo data were
+case, it is difficult to extract the intact target trajectory. The                       extracted to test the performance of the proposed method. Each
+increase of the SRR leads to decrease in NESR and increase in                            ping data had 16684 data points and the detection range reached
+ESE [Fig. 5(b) and (c)]. The ESE is close between D_RPCA and                             300 m.
+MNS, higher than that of the D_RAE throughout the SRR range,
+indicating that the proposed method has a good performance in                            5.2. Field data processing and analysis
+reverberation suppression. When the SRR is greater than 15 dB,
+both the NESR and ESE remain constant, and the reverberation                                For the field data, the network structure and the parameter set-
+can be much suppressed.                                                                  tings of the AE were the same as those of the simulated data,
+
+
+
+
+     Fig. 5. Average SC, NESR and ESE in all pings with different SRR. (a) Average SC of the two methods. (b) NESR of different matrices. (c) ESE of different matrices.
+
+
+
+
+Fig. 6. Experimental configuration and receiving data. (a) Schematic of the experiment. (b) Underwater acoustic data received by hydrophone. (c) Underwater acoustic data
+received by echosounder.
+
+                                                                                     7
+W. Xiang, Z. Song, W. Yang et al.                                                                                                          Applied Acoustics 206 (2023) 109301
+
+
+except that the input layer of the encoding network and the output                         by the proposed method is clearer, making it easier to identify the
+layer of the decoder contained 16684 nodes, much higher than that                          locations of the targets, which demonstrates the advantage of the
+of simulation data.                                                                        proposed method.
+   To verify the reverberation suppression performance for                                    To evaluate the performance of the proposed algorithm on the
+detecting a moving target, the reverberation suppression results                           experimental data, the SC of the target echo components estimated
+of the field data by the RPCA and proposed methods are shown                               by the two methods was calculated. When r0 in Eq. (21) is set to 3,
+in Fig. 7. The primal data received by the echosounder contains                            the average value of SC by the proposed method is approximately
+the target echoes and many reverberations. The steady and target                           0.98 ± 0.004, whereas that by the RPCA method is 0.43 ± 0.014
+echo components estimated by the proposed method [Fig. 7(d)                                (Fig. 8). Since the echosounder used did not have the function of
+and (e)] give similar results to simulations. The steady compo-                            GPS positioning in the experiment, the locations of the targets
+nents only contain the background reverberation, and the target                            could not be accurately obtained. We cannot calculate the ESE
+trajectory in the target echo components is visible, which sug-                            and NSER to measure the effectiveness of the results in this study.
+gests that most of the reverberation has been suppressed by the                            The performance of the proposed method can be evaluated in
+proposed method. A clear moving target trajectory is extracted                             another fact that two trajectories in the figures, with one for the
+through CCA [Fig. 7(f)]. The steady components and the target                              target and the other for the hammer. This shows that it is reason-
+echo components estimated by the RPCA method, are normalized                               able to use the proposed method for multi-target detection, and
+and highlighted [Fig. 7(g)-(i)]. To some extent, the reverberation                         the target echo components obtained by RAE are independent of
+was reduced and the target trajectory appeared; however, some                              the number of targets.
+strong scatterings still existed, as shown in the red rectangles.                             Owing to the sparsity of the target echo components, the trajec-
+Notably, part of the moving target echoes can be observed in                               tory of the moving target can be extracted by using the evolution of
+the steady components estimated by RPCA, while no target                                   the target locations over the pings. Strong scattering unrelated to
+echoes exist in the steady components estimated by the proposed                            the target can lead to false positives in some cases. However, false
+method [Fig. 7(d) and (g)]. Overall, the target trajectory obtained                        positives rarely evolve continuously in the spatial-time space. In
+
+
+
+
+Fig. 7. Reverberation suppression for field data of all pings by the proposed method and RPCA method; the target trajectories are shown in white and orange ellipses, and the
+residual strong reverberation is shown in red rectangles. (a) Primal field data of all pings. (b) Mean-normalized data of (a). (c) Other noise components. (d) Steady components
+estimated by the proposed method. (e) Target echo components estimated by the proposed method. (f) The target trajectory highlighted by the proposed CCA method. (g)
+Steady components estimated by RPCA method. (h) Target echo components estimated by RPCA method. (i) Normalization results of target components based on threshold
+by RPCA method. (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)
+
+                                                                                       8
+W. Xiang, Z. Song, W. Yang et al.                                                                                                       Applied Acoustics 206 (2023) 109301
+
+
+                                                                                         6. Conclusion
+
+                                                                                            To reduce reverberation and improve the performance of active
+                                                                                         sonars in detecting moving targets, a method, which formulates
+                                                                                         the problem of reverberation suppression and moving target
+                                                                                         detection as the estimation of low-rank and sparse matrices, is pro-
+                                                                                         posed. The RAE is applied to recover low-rank and sparse compo-
+                                                                                         nents of the data corresponding to steady components and target
+                                                                                         echo components. The CCA method further highlights the trajec-
+                                                                                         tory of the moving target based on the continuity of the target
+                                                                                         locations over the acoustic pings. Both the simulation and field
+                                                                                         experiment data results demonstrate the effectiveness of the pro-
+                                                                                         posed method. Compared with the RPCA method, the SC of the pro-
+                                                                                         posed method increased by a factor of 1.09, and the NESR was
+                                                                                         reduced by 51.28% on average based on numerical simulation. In
+                                                                                         our simulation and experiments, the signal of each ping was one-
+                                                                                         dimensional data, which can be extended to a two-dimensional
+                                                                                         scale in the future. The proposed method exhibits potential for tar-
+                                                                                         get enhancement in various scenarios such as hazard-causing
+Fig. 8. SC in all pings of the target echo components for the experimental data by
+                                                                                         organism surveillance.
+the proposed method and the RPCA method.
+
+
+                                                                                         Data availability
+practice, the existence of a target is determined by the combination
+of the appearance of the target echoes in many pings. Thus, a target                        Data will be made available on request.
+trajectory comprising multiple pings was obtained. Some extreme
+cases could reduce the applicability of the proposed method. For                         Declaration of Competing Interest
+example, if a target exists only in a single ping or several pings,
+it may be mistakenly judged as a strong reverberation and reduced.                           The authors declare that they have no known competing finan-
+Besides, if the target is overwhelmed by strong reverberation in a                       cial interests or personal relationships that could have appeared
+low signal-to-reverberation ratio, some strong scatterings may be                        to influence the work reported in this paper.
+misjudged as the target echoes.
+    The coding network aims to reduce dimension and compress                             Acknowledgments
+data on the condition that the feature number of the input layer
+is greater than that of the hidden layer. Therefore, the number of                           This work was financially supported by the Project supported
+input features influences only the computation process (speed                            by the National Natural Science Foundation of China (Grant Nos.
+and time) and will not affect the final computation result of the                        12074323; 42106181), the Science and Technology Major Project
+algorithm proposed in this paper. The number of input nodes in                           of Fujian Province (Grant Nos. 2021NZ033016), the Natural Science
+the coding network is determined by the size of the target echoes.                       Foundation of Fujian Province of China (No. 2022J02003), Research
+In the field experiment, the target was moved from 0 to 300 m, and                       on Bionic Detection Technology of High Speed Vehicle, the China
+the echoes correspondingly had a sample size of 16684. In compar-                        National Postdoctoral Program for Innovative Talents (Grant No.
+ison, the range within which the target moved was 200 m (from 0                          BX2021168) and the Outstanding Postdoctoral Scholarship, State
+to 200 m) in numerical simulation, resulting in an echo sample size                      Key Laboratory of Marine Environmental Science at Xiamen
+of 11104. The algorithm proposed has excellent performance to                            University. The authors are grateful to Xiaohui Xu and Zhen Xiao
+extract the trajectory of target movement, which has been exam-                          for their assistance in conducting this study.
+ined in both field and simulation data.
+    Traditional matrix factorization algorithms solve low-rank
+matrices constrained in a linear space; however, the change in                           References
+underwater background reverberation is nonlinear, which results
+                                                                                         [1] Pan X, Li C, Xu Y, Xu W, Gong X. Combination of time-reversal focusing and
+in an inaccurate estimation of the steady components. By adjusting                           nulling for detection of small targets in strong reverberation environments. IET
+the relationship between the SC of the sparse matrix and the                                 Radar Sonar Navig 2014;8:9–16. https://doi.org/10.1049/iet-rsn.2012.0359.
+matrix rank, Zhu et al. [25] proposed performing sparsity compen-                        [2] Zhu Q, Li Y, Jiang Y. Line-type moving object detection for sonar images.
+                                                                                             Commun Comput Inf Sci 2012;331:189–96.
+sation for the low-rank matrix obtained by linear estimation using                       [3] Urick R. Principles of Underwater Sound. XF2006174893 1983.
+a fixed rank to ensure accurate estimation of the steady compo-                          [4] Jia H, Li X. Underwater reverberation suppression based on non-negative
+nents. The proposed method utilizes the nonlinear representation                             matrix factorisation. J Sound Vib 2021;506:. https://doi.org/10.1016/j.
+                                                                                             jsv.2021.116166116166.
+ability of the AE and performs an adaptive nonlinear estimation                          [5] Ge F-X, Chen Y, Li W. Target detecton and tracking via structured convex
+of steady components without additional compensation. It is more                             optimization. 2017 IEEE Int. Conf. Acoust. Speech Signal Process. ICASSP, New
+reasonable to perform a nonlinear estimation on the steady com-                              Orleans,     LA:    IEEE;   2017,      p.    426–30.     https://doi.org/10.1109/
+                                                                                             ICASSP.2017.7952191.
+ponents of the reverberation. Comparing the data decomposition                           [6] Colosi JA, Cornuelle BD, Dzieciuch MA, Worcester PF, Chandrayadula TK.
+processes of RPCA and the proposed method, the RPCA method                                   Observations of phase and intensity fluctuations for low-frequency, long-range
+required two steps to extract the target trajectory. First, the                              transmissions in the Philippine Sea and comparisons to path-integral theory. J
+                                                                                             Acoust Soc Am 2019;146:567–85. https://doi.org/10.1121/1.5118252.
+dynamic components S are obtained; second, the target locations                          [7] Wu F-Y, Yang K, Tong F, Tian T. Compressed sensing of delay and Doppler
+are determined by thresholding the dynamic components. How-                                  spreading in underwater acoustic channels. IEEE Access 2018;6:36031–8.
+ever, the proposed method decomposes the data based on an                                    https://doi.org/10.1109/ACCESS.2018.2850929.
+                                                                                         [8] Yang TC, Schindall J, Huang C-F, Liu J-Y. Clutter reduction using Doppler sonar
+objective function, which improves the overall performance of
+                                                                                             in a harbor environment. J Acoust Soc Am 2012;132:3053–67. https://doi.org/
+the algorithm.                                                                               10.1121/1.4756921.
+
+                                                                                     9
+W. Xiang, Z. Song, W. Yang et al.                                                                                                         Applied Acoustics 206 (2023) 109301
+
+
+ [9] Yang TC. Acoustic Dopplergram for intruder defense. J Acoust Soc Am                    [27] Duan R, Yang KD, Chapman NR, Ma YL. Observing the fluctuations of arrival
+     2008;124:2501. https://doi.org/10.1121/1.4782852.                                           time and amplitude with short-range experimental data. Appl Acoust
+[10] Li X, Xia Z. Research of underwater bottom object and reverberation in feature              2013;74:1297–307. https://doi.org/10.1016/j.apacoust.2013.05.004.
+     space. J Mar Sci Appl 2013;12:235–9. https://doi.org/10.1007/s11804-013-               [28] Zhang Y, d’Aspremont A, Ghaoui LE. Sparse PCA: Convex Relaxations,
+     1190-1.                                                                                     Algorithms and Applications 2010.
+[11] Zhu Y, Yang K, Duan R, Wu F. Sparse spatial spectral estimation with heavy sea         [29] Amailland S, Thomas J-H, Pézerat C, Boucheron R. Boundary layer noise
+     bottom reverberation in the fractional Fourier domain. Appl Acoust 2020;160:.               subtraction in hydrodynamic tunnel using robust principal component
+     https://doi.org/10.1016/j.apacoust.2019.107132107132.                                       analysis. J Acoust Soc Am 2018;143:2152–63. https://doi.org/10.1121/
+[12] Li X, Xia Z, Wang X, Mu L. Blind separation of underwater target echoes in                  1.5023685.
+     reverberation background. Harbin Gongcheng Daxue XuebaoJournal Harbin                  [30] Chalapathy R, Menon AK, Chawla S. Robust, Deep and Inductive Anomaly
+     Eng Univ 2015;36:62–7. https://doi.org/10.3969/j.issn.1006-7043.201310034.                  Detection 2017.
+[13] Guo Y, Tharmarasa R, Rajan S, Song TL, Kirubarajan T. Passive tracking in heavy        [31] Hinton GE, Salakhutdinov RR. Reducing the dimensionality of data with neural
+     clutter with sensor location uncertainty. IEEE Trans Aerosp Electron Syst                   networks. Science 2006;313:504–7. https://doi.org/10.1126/science.1127647.
+     2016;52:1536–54. https://doi.org/10.1109/TAES.2016.140820.                             [32] Zhou C, Paffenroth RC. Anomaly Detection with Robust Deep Autoencoders.
+[14] Guo S, Cao Z, Feng C, Gao S. Track before detect algorithm based on particle                Proc. 23rd ACM SIGKDD Int. Conf. Knowl. Discov. Data Min., Halifax NS
+     filter. Proc. 2011 Cross Strait Quad-Reg. Radio Sci. Wirel. Technol. Conf.,                 Canada: ACM; 2017, p. 665–74. https://doi.org/10.1145/3097983.3098052.
+     Harbin, Heilongjiang, China: IEEE; 2011, p. 1590–3. https://doi.org/10.1109/           [33] He L, Ren X, Gao Q, Zhao X, Yao B, Chao Y. The connected-component labeling
+     CSQRWC.2011.6037277.                                                                        problem: a review of state-of-the-art algorithms. Pattern Recognit
+[15] Zhu Y, Duan R, Yang K, Xue R, Wang N. Reverberation suppression based on                    2017;70:25–43. https://doi.org/10.1016/j.patcog.2017.04.018.
+     multi-ping association in a moving target scenario. J Acoust Soc Am                    [34] Zhou T, Tao D. GoDec: Randomized Low-rank & Sparse Matrix Decomposition
+     2020;148:2195–208. https://doi.org/10.1121/10.0002175.                                      in Noisy Case n.d.:9.
+[16] Chandrasekaran V, Sanghavi S, Parrilo PA, Willsky AS. Rank-sparsity                    [35] Xiong L, Chen X, Schneider J. Direct Robust Matrix Factorizatoin for Anomaly
+     incoherence for matrix decomposition. SIAM J Optim 2011;21:572–96.                          Detection. 2011 IEEE 11th Int. Conf. Data Min., Vancouver, BC, Canada: IEEE;
+     https://doi.org/10.1137/090761793.                                                          2011, p. 844–53. https://doi.org/10.1109/ICDM.2011.52.
+[17] Halko N, Martinsson PG, Tropp JA. Finding structure with randomness:                   [36] Donoho D. Donoho, D.L. For Most Large Underdetermined Systems of Linear
+     probabilistic     algorithms   for     constructing     approximate      matrix             Equations the Minimal L(1)-norm Solution Is also the Sparsest Solution.
+     decompositions. SIAM Rev 2011;53(2):217–88.                                                 Communications on Pure and Applied Mathematics 59(6), 797-829. Commun
+[18] Zhou Z, Li X, Wright J, Candes E, Ma Y. Stable Principal Component Pursuit.                 Pure Appl Math 2006; 59:797–829. https://doi.org/10.1002/cpa.20132.
+     2010 IEEE Int. Symp. Inf. Theory, Austin, TX, USA: IEEE; 2010, p. 1518–22.             [37] Paffenroth R, du Toit P, Nong R, Scharf L, Jayasumana AP, Bandara V. Space-
+     https://doi.org/10.1109/ISIT.2010.5513535.                                                  time signal processing for distributed pattern detection in sensor networks.
+[19] Candès EJ, Li X, Ma Y, Wright J. Robust principal component analysis? J ACM                 IEEE J Sel Top Signal Process 2013;7:38–49. https://doi.org/10.1109/
+     2011;58:1–37. https://doi.org/10.1145/1970392.1970395.                                      JSTSP.2012.2237381.
+[20] Zhang Z, Matsushita Y, Ma Y, IEEE. Camera Calibration with Lens Distortion             [38] LeCun Y, Bengio Y, Hinton G. Deep learning. Nature 2015;521:436–44. https://
+     from Low-rank Textures, 2011.                                                               doi.org/10.1038/nature14539.
+[21] Zhang X, Lin Z, Sun F, Ma Y. Rectification of Optical Characters as Transform          [39] Boyd S. Distributed optimization and statistical learning via the alternating
+     Invariant Low-Rank Textures. 2013 12th Int. Conf. Doc. Anal. Recognit.,                     direction method of multipliers. Found TrendsÒ Mach Learn 2010;3(1):1–122.
+     Washington, DC, USA: IEEE; 2013, p. 393–7. https://doi.org/10.1109/                    [40] Boyd S, Vandenberghe L, editors. Convex Optimization. Cambridge University
+     ICDAR.2013.86.                                                                              Press; 2004.
+[22] Weichang Li, Subrahmanya N, Feng Xu. Online subspace and sparse filtering              [41] Hernandez-Belmonte U, Ayala V, Sanchez-Yanez R. A Comparative Review of
+     for target tracking in reverberant environment. 2012 IEEE 7th Sens. Array                   Two-Pass Connected Component Labeling Algorithms. vol. 7095. 2011.
+     Multichannel Signal Process. Workshop SAM, Hoboken, NJ, USA: IEEE; 2012, p.                 https://doi.org/10.1007/978-3-642-25330-0_40.
+     329–32. https://doi.org/10.1109/SAM.2012.6250502.                                      [42] Bailey D, Klaiber M. Zig-Zag based single-pass connected components analysis.
+[23] Yin J, Liu B, Zhu G, Xie Z. Moving target detection using dynamic mode                      J Imaging 2019;5:45. https://doi.org/10.3390/jimaging5040045.
+     decomposition. Sensors 2018;18:3461. https://doi.org/10.3390/s18103461.                [43] Etter P. Recent advances in under water acoustic modelling and simulation. J
+[24] Qian W, Cao F. Adaptive algorithms for low-rank and sparse matrix recovery                  Sound Vib 2001;240:351–83. https://doi.org/10.1006/jsvi.2000.3212.
+     with truncated nuclear norm. Int J Mach Learn Cybern 2019;10:1341–55.                  [44] Ren J, Vaughan RG. Model-based sonar motion compensation for bottom
+     https://doi.org/10.1007/s13042-018-0814-9.                                                  reverberation coherence. IEEE J Ocean Eng 2010;35:887–94. https://doi.org/
+[25] Zhu Y, Duan R, Yang K. Robust shallow water reverberation suppression                       10.1109/JOE.2010.2079610.
+     methods based on low-rank and sparsity decomposition. J Acoust Soc Am                  [45] Kingma DP, Ba J. Adam: A Method for Stochastic Optimization 2017.
+     2022;151:2826–42. https://doi.org/10.1121/10.0010353.                                  [46] Ioffe S, Szegedy C. Batch Normalization: Accelerating Deep Network Training
+[26] Liu B, Yin J, Zhu G. An active detection method for an underwater intruder                  by Reducing Internal Covariate Shift 2015.
+     using the alternating direction method of multipliers. J Acoust Soc Am                 [47] BioSonics user manual (2015). Seattle: BioSonics.
+     2019;146:4324–32. https://doi.org/10.1121/1.5139214.
+
+
+
+
+                                                                                       10
+

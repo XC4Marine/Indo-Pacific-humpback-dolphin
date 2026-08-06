@@ -1,0 +1,12 @@
+Input WAV: D:\Project_Github\Indo-Pacific-humpback-dolphin\09_Locate\Voyage_Ori_10\PulseTrain_291\Click_007\Pulse_007.wav
+Sampling rate: 576000 Hz
+Audio duration: 10.001736 ms
+Segment length: 50.000 μs (29 samples)
+Maximum multipath delay: 4.000 ms
+Candidate count: 7
+Selected multipath count: 2
+
+Selected arrivals:
+- main_arrival: time=5.019097 ms, delay=0.000000 ms, relative_RMS=0.000 dB, |NCC|=1.000, spectral_cosine=1.000, score=1.000
+- multipath_1: time=5.178819 ms, delay=0.159722 ms, relative_RMS=-7.631 dB, |NCC|=0.492, spectral_cosine=0.812, score=0.525
+- multipath_2: time=5.253472 ms, delay=0.234375 ms, relative_RMS=-14.120 dB, |NCC|=0.698, spectral_cosine=0.897, score=0.537
