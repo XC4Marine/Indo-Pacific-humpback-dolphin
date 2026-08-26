@@ -1,0 +1,6 @@
+outputs/*
+!outputs/research_report.md
+__pycache__/
+.ipython_runtime/
+.jupyter_runtime/
+

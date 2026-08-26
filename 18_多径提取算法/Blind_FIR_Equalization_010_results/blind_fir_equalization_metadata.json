@@ -1,0 +1,192 @@
+{
+  "record": "010 | Voyage_Ori_01 / PulseTrain_014 / Click_008",
+  "input_wav": "D:\\Project_Github\\Indo-Pacific-humpback-dolphin\\00_Data\\Positive_Clicks_3500\\Voyage_Ori_01\\PulseTrain_014\\Click_008\\Pulse_008.wav",
+  "sample_rate_hz": 576000,
+  "method": "unsupervised multistart blind FIR spiking equalization (MED fixed-point objective)",
+  "uses_signal_template": false,
+  "parameters": {
+    "bandpass_hz": [
+      20000.0,
+      190000.0
+    ],
+    "equalizer_length_ms": 0.35,
+    "n_starts": 10,
+    "iterations_per_start": 70,
+    "ridge_ratio": 0.0002,
+    "damping": 0.3,
+    "consensus_runs": 5,
+    "maximum_delay_ms": 3.2,
+    "minimum_path_delay_ms": 0.07,
+    "peak_relative_threshold": 0.035,
+    "peak_prominence_ratio": 0.018,
+    "support_tolerance_us": 25.0,
+    "source_length_ms": 0.3,
+    "source_ridge_ratio": 0.001,
+    "reconstruction_max_lag_ms": 0.2,
+    "sparse_sign_radius_us": 12.0,
+    "monte_carlo_trials": 100,
+    "monte_carlo_noise_scale": 1.0,
+    "monte_carlo_noise_block_us": 50.0,
+    "monte_carlo_match_tolerance_us": 35.0,
+    "monte_carlo_seed": 20260814,
+    "random_seed": 20260813
+  },
+  "ranked_final_excess_kurtosis": [
+    1146.4785934355743,
+    1122.2921158869224,
+    1118.5345976097735,
+    1103.6540286560012,
+    1083.8484799897078,
+    1059.5999185212138,
+    1058.4369597384198,
+    1058.42259525312,
+    992.3415062581885,
+    887.9171094774721
+  ],
+  "detection_threshold": 0.08217311598833717,
+  "monte_carlo_confidence": {
+    "definition": "repeat detection rate under block-bootstrap background-noise perturbations; not posterior existence probability",
+    "noise_pool_start_ms": 0.25,
+    "noise_pool_end_ms": 4.397569444444445,
+    "noise_pool_rms": 0.003627951004746202,
+    "mean_detected_paths_per_trial": 4.3,
+    "mean_detection_threshold": 0.0818093277702623,
+    "path_results": [
+      {
+        "path": "direct",
+        "reference_delay_ms": 0.0,
+        "monte_carlo_confidence": null,
+        "detections": null,
+        "trials": 100,
+        "delay_median_ms": 0.0,
+        "delay_ci95_low_ms": 0.0,
+        "delay_ci95_high_ms": 0.0,
+        "status": "fixed alignment anchor; confidence not estimated"
+      },
+      {
+        "path": "multipath_1",
+        "reference_delay_ms": 0.11805555555555557,
+        "monte_carlo_confidence": 1.0,
+        "detections": 100,
+        "trials": 100,
+        "delay_median_ms": 0.11805555555555557,
+        "delay_ci95_low_ms": 0.11805555555555557,
+        "delay_ci95_high_ms": 0.11805555555555557,
+        "status": "estimated"
+      },
+      {
+        "path": "multipath_2",
+        "reference_delay_ms": 1.2413194444444444,
+        "monte_carlo_confidence": 0.39,
+        "detections": 39,
+        "trials": 100,
+        "delay_median_ms": 1.2413194444444444,
+        "delay_ci95_low_ms": 1.2395833333333335,
+        "delay_ci95_high_ms": 1.2413194444444444,
+        "status": "estimated"
+      },
+      {
+        "path": "multipath_3",
+        "reference_delay_ms": 1.3020833333333333,
+        "monte_carlo_confidence": 0.86,
+        "detections": 86,
+        "trials": 100,
+        "delay_median_ms": 1.3003472222222223,
+        "delay_ci95_low_ms": 1.3003472222222223,
+        "delay_ci95_high_ms": 1.3020833333333333,
+        "status": "estimated"
+      },
+      {
+        "path": "multipath_4",
+        "reference_delay_ms": 2.701388888888889,
+        "monte_carlo_confidence": 0.86,
+        "detections": 86,
+        "trials": 100,
+        "delay_median_ms": 2.701388888888889,
+        "delay_ci95_low_ms": 2.701388888888889,
+        "delay_ci95_high_ms": 2.701388888888889,
+        "status": "estimated"
+      }
+    ]
+  },
+  "reconstruction": {
+    "scope": "in-sample descriptive reconstruction; source estimated from the same observed click",
+    "source_length_samples": 173,
+    "full_response_r_squared": 0.9781796272499842,
+    "sparse_detected_paths_r_squared": 0.9048845117234963,
+    "full_response_rmse": 0.005105224986667581,
+    "sparse_detected_paths_rmse": 0.010658827270500644,
+    "full_alignment_lag_samples": 0,
+    "sparse_alignment_lag_samples": 0,
+    "full_fitted_gain": 1.0004768013388088,
+    "sparse_fitted_gain": 1.0009458045163688
+  },
+  "paths": [
+    {
+      "path": "direct",
+      "arrival_sample": 2879,
+      "arrival_time_ms": 4.998263888888889,
+      "relative_delay_ms": 0.0,
+      "relative_amplitude": 0.999999999999,
+      "relative_level_db": 0.0,
+      "multistart_support": 1.0,
+      "monte_carlo_confidence": null,
+      "delay_median_ms_mc": 0.0,
+      "delay_ci95_low_ms_mc": 0.0,
+      "delay_ci95_high_ms_mc": 0.0
+    },
+    {
+      "path": "multipath_1",
+      "arrival_sample": 2947,
+      "arrival_time_ms": 5.116319444444444,
+      "relative_delay_ms": 0.11805555555555557,
+      "relative_amplitude": 0.10793560895578348,
+      "relative_level_db": -19.336705078135882,
+      "multistart_support": 1.0,
+      "monte_carlo_confidence": 1.0,
+      "delay_median_ms_mc": 0.11805555555555557,
+      "delay_ci95_low_ms_mc": 0.11805555555555557,
+      "delay_ci95_high_ms_mc": 0.11805555555555557
+    },
+    {
+      "path": "multipath_2",
+      "arrival_sample": 3594,
+      "arrival_time_ms": 6.239583333333333,
+      "relative_delay_ms": 1.2413194444444444,
+      "relative_amplitude": 0.13344000011915252,
+      "relative_level_db": -17.49427932630575,
+      "multistart_support": 0.8,
+      "monte_carlo_confidence": 0.39,
+      "delay_median_ms_mc": 1.2413194444444444,
+      "delay_ci95_low_ms_mc": 1.2395833333333335,
+      "delay_ci95_high_ms_mc": 1.2413194444444444
+    },
+    {
+      "path": "multipath_3",
+      "arrival_sample": 3629,
+      "arrival_time_ms": 6.300347222222222,
+      "relative_delay_ms": 1.3020833333333333,
+      "relative_amplitude": 0.17458638335204169,
+      "relative_level_db": -15.1597926313081,
+      "multistart_support": 0.6,
+      "monte_carlo_confidence": 0.86,
+      "delay_median_ms_mc": 1.3003472222222223,
+      "delay_ci95_low_ms_mc": 1.3003472222222223,
+      "delay_ci95_high_ms_mc": 1.3020833333333333
+    },
+    {
+      "path": "multipath_4",
+      "arrival_sample": 4435,
+      "arrival_time_ms": 7.699652777777778,
+      "relative_delay_ms": 2.701388888888889,
+      "relative_amplitude": 0.18772400472920403,
+      "relative_level_db": -14.529603790482419,
+      "multistart_support": 1.0,
+      "monte_carlo_confidence": 0.86,
+      "delay_median_ms_mc": 2.701388888888889,
+      "delay_ci95_low_ms_mc": 2.701388888888889,
+      "delay_ci95_high_ms_mc": 2.701388888888889
+    }
+  ],
+  "identifiability_note": "Single-channel blind equalization has scale, sign, overall-delay and source/channel factorization ambiguities; paths are relative structural estimates."
+}

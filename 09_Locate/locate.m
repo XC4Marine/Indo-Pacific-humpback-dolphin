@@ -3,7 +3,7 @@ clc; clear; close all;
 
 % 改变baseDir就可以
 % 路径定义
-baseDir = 'D:\Project_Github\Indo-Pacific-humpback-dolphin\00_Data\ClickTrains\PulseTrain_737';
+baseDir = 'D:\Project_Github\Indo-Pacific-humpback-dolphin\00_Data\ClickTrains\PulseTrain_545';
 trainPath = fullfile(baseDir, 'PulseTrain.wav');
 paramPath = fullfile(baseDir, 'PulseParameters.txt');
 
@@ -44,8 +44,28 @@ teo_norm = teo_val / max(teo_val);
 fprintf('正在进行模板匹配 (全局互相关)...\n');
 % 将"1序列模板"与信号的"TEO能量图"进行互相关
 [c, lags] = xcorr(teo_norm, synthetic_template);
-[~, maxIdx] = max(c);
-bestLag = lags(maxIdx); % 找到最契合的起始样本偏移
+
+% 只允许全部 Pulse 模板点都落在音频范围内的 lag。
+% 如果不加此约束，短 PulseTrain 可能让部分模板越界，并被局部强 TEO 峰吸引。
+validLagMask = (pulse_rel_indices(1) + lags >= 1) & ...
+    (pulse_rel_indices(end) + lags <= N);
+if ~any(validLagMask)
+    error('Chico, 不存在可让全部 Pulse 模板点落入音频范围的有效 lag。');
+end
+
+[unconstrainedBestScore, unconstrainedMaxIdx] = max(c);
+validLagIndices = find(validLagMask);
+[bestScore, validMaxIdx] = max(c(validLagMask));
+maxIdx = validLagIndices(validMaxIdx);
+bestLag = lags(maxIdx); % 完整模板约束下最契合的起始样本偏移
+
+if ~validLagMask(unconstrainedMaxIdx)
+    fprintf(['无约束最佳 lag=%d（得分 %.6f）会导致模板越界，', ...
+        '已改用完整模板 lag=%d（得分 %.6f）。\n'], ...
+        lags(unconstrainedMaxIdx), unconstrainedBestScore, bestLag, bestScore);
+else
+    fprintf('完整模板最佳 lag=%d（得分 %.6f）。\n', bestLag, bestScore);
+end
 
 % 根据偏移计算所有脉冲的最终理论时间点
 theoretical_samples = pulse_rel_indices + bestLag;
@@ -137,6 +157,8 @@ linkaxes(findobj(gcf, 'Type', 'axes'), 'x');
 xlim([theoretical_times(1)-0.05, theoretical_times(end)+0.05]); % 默认聚焦到脉冲群区域
 
 %% 7. 创建文件夹并提取前后 5ms 的波形与图片
+% 以下旧版导出模块已停用：保留代码，但不再生成裁剪 WAV 或逐 Pulse PNG。
+%{
 % 定义保存路径
 saveFolderName = 'Extracted_Pulses_5ms';
 saveDirPath = fullfile(baseDir, saveFolderName);
@@ -304,3 +326,241 @@ end
 
 close(hFigAnalysis);
 fprintf('\n模块8处理完成！分析结果已保存至: %s\n', analysisDirPath);
+%}
+
+%% 9. Pulse 定位准确性 Report（不修改或重新裁剪 Pulse）
+reportFolderName = 'Locate_Position_Report';
+reportDirPath = fullfile(baseDir, reportFolderName);
+if ~exist(reportDirPath, 'dir')
+    mkdir(reportDirPath);
+end
+
+reportCsvPath = fullfile(reportDirPath, 'pulse_position_report.csv');
+reportPngPath = fullfile(reportDirPath, 'pulse_position_summary.png');
+reportTxtPath = fullfile(reportDirPath, 'pulse_position_summary.txt');
+
+% 按参数表中的 Pulse 编号匹配原始 Pulse_N.wav，避免按文件名字典序错排。
+pulseNumbers = df_param{:, "No.Pulse"};
+pulseNumbers = double(pulseNumbers(:));
+reportCount = numel(pulseNumbers);
+
+algorithmSample = nan(reportCount, 1);
+availableAlgorithmCount = min(reportCount, numel(theoretical_samples));
+algorithmSample(1:availableAlgorithmCount) = ...
+    double(theoretical_samples(1:availableAlgorithmCount));
+
+referenceStartSample = nan(reportCount, 1);
+referencePeakSample = nan(reportCount, 1);
+matchStatus = strings(reportCount, 1);
+referenceFile = strings(reportCount, 1);
+
+fprintf('\n开始生成 Pulse 定位准确性 Report...\n');
+reverseStr = '';
+for k = 1:reportCount
+    pulseNumber = pulseNumbers(k);
+    pulseFileName = sprintf('Pulse_%d.wav', pulseNumber);
+    pulsePath = fullfile(baseDir, pulseFileName);
+    referenceFile(k) = string(pulseFileName);
+
+    if ~exist(pulsePath, 'file')
+        matchStatus(k) = "missing_reference_file";
+    else
+        [pulseData, pulseFs] = audioread(pulsePath);
+        pulseData = double(pulseData);
+
+        if pulseFs ~= fs
+            matchStatus(k) = "sample_rate_mismatch";
+        elseif size(pulseData, 2) ~= size(trainData, 2)
+            matchStatus(k) = "channel_count_mismatch";
+        elseif isempty(pulseData) || size(pulseData, 1) > N
+            matchStatus(k) = "invalid_reference_length";
+        else
+            exactStarts = localFindExactWaveformStarts(trainData, pulseData);
+            if isempty(exactStarts)
+                matchStatus(k) = "no_exact_match";
+            elseif numel(exactStarts) > 1
+                matchStatus(k) = "multiple_exact_matches";
+            else
+                pulseTeo = zeros(size(pulseData, 1), 1);
+                pulseMono = pulseData(:, 1);
+                if numel(pulseMono) >= 3
+                    pulseTeo(2:end-1) = pulseMono(2:end-1).^2 - ...
+                        pulseMono(1:end-2) .* pulseMono(3:end);
+                end
+                [maxPulseTeo, localPeakIndex] = max(pulseTeo);
+                if isempty(maxPulseTeo) || ~isfinite(maxPulseTeo) || maxPulseTeo <= 0
+                    matchStatus(k) = "invalid_reference_teo";
+                else
+                    referenceStartSample(k) = exactStarts(1);
+                    referencePeakSample(k) = exactStarts(1) + localPeakIndex - 1;
+                    matchStatus(k) = "matched";
+                end
+            end
+        end
+    end
+
+    percentDone = 100 * k / max(1, reportCount);
+    barLen = 20;
+    filledLen = floor(barLen * k / max(1, reportCount));
+    barStr = [repmat('=', 1, filledLen), ...
+        repmat(' ', 1, barLen - filledLen)];
+    msg = sprintf('Report 进度: [%s] %.1f%% (%d/%d)', ...
+        barStr, percentDone, k, reportCount);
+    fprintf([reverseStr, msg]);
+    reverseStr = repmat(sprintf('\b'), 1, length(msg));
+end
+fprintf('\n');
+
+algorithmTimeS = (algorithmSample - 1) / fs;
+referenceTimeS = (referencePeakSample - 1) / fs;
+signedErrorSamples = algorithmSample - referencePeakSample;
+absErrorSamples = abs(signedErrorSamples);
+signedErrorMs = signedErrorSamples / fs * 1000;
+absErrorMs = abs(signedErrorMs);
+
+reportTable = table(pulseNumbers, algorithmSample, algorithmTimeS, ...
+    referenceStartSample, referencePeakSample, referenceTimeS, ...
+    signedErrorSamples, absErrorSamples, signedErrorMs, absErrorMs, ...
+    matchStatus, referenceFile, ...
+    'VariableNames', {'PulseNumber', 'AlgorithmSample', 'AlgorithmTime_s', ...
+    'ReferenceStartSample', 'ReferencePeakSample', 'ReferenceTime_s', ...
+    'SignedError_samples', 'AbsError_samples', 'SignedError_ms', ...
+    'AbsError_ms', 'MatchStatus', 'ReferenceFile'});
+writetable(reportTable, reportCsvPath, 'Encoding', 'UTF-8');
+
+validMask = matchStatus == "matched" & isfinite(signedErrorMs);
+validErrorsMs = signedErrorMs(validMask);
+validAbsErrorsMs = absErrorMs(validMask);
+validCount = nnz(validMask);
+
+if validCount > 0
+    meanBiasMs = mean(validErrorsMs);
+    maeMs = mean(validAbsErrorsMs);
+    medianAbsErrorMs = median(validAbsErrorsMs);
+    rmseMs = sqrt(mean(validErrorsMs.^2));
+    p95AbsErrorMs = prctile(validAbsErrorsMs, 95);
+    maxAbsErrorMs = max(validAbsErrorsMs);
+else
+    meanBiasMs = NaN;
+    maeMs = NaN;
+    medianAbsErrorMs = NaN;
+    rmseMs = NaN;
+    p95AbsErrorMs = NaN;
+    maxAbsErrorMs = NaN;
+end
+
+summaryFileId = fopen(reportTxtPath, 'w', 'n', 'UTF-8');
+if summaryFileId < 0
+    error('Chico, 无法创建 Report 摘要文件: %s', reportTxtPath);
+end
+summaryCleanup = onCleanup(@() fclose(summaryFileId));
+fprintf(summaryFileId, 'Pulse 定位准确性 Report\n');
+fprintf(summaryFileId, '==========================\n');
+fprintf(summaryFileId, '输入目录: %s\n', baseDir);
+fprintf(summaryFileId, '采样率: %.0f Hz\n', fs);
+fprintf(summaryFileId, 'Pulse 总数: %d\n', reportCount);
+fprintf(summaryFileId, '有效唯一匹配: %d\n', validCount);
+fprintf(summaryFileId, '平均偏差: %.9f ms\n', meanBiasMs);
+fprintf(summaryFileId, '平均绝对误差 MAE: %.9f ms\n', maeMs);
+fprintf(summaryFileId, '中位绝对误差: %.9f ms\n', medianAbsErrorMs);
+fprintf(summaryFileId, '均方根误差 RMSE: %.9f ms\n', rmseMs);
+fprintf(summaryFileId, '绝对误差 95%% 分位数: %.9f ms\n', p95AbsErrorMs);
+fprintf(summaryFileId, '最大绝对误差: %.9f ms\n', maxAbsErrorMs);
+clear summaryCleanup;
+
+reportFigure = figure('Visible', 'off', 'Color', 'w', ...
+    'Position', [100 100 1200 900]);
+reportLayout = tiledlayout(reportFigure, 3, 1, ...
+    'TileSpacing', 'compact', 'Padding', 'compact');
+
+nexttile(reportLayout, 1);
+plot(timeAxis, teo_val, 'Color', [0.65 0.65 0.65], 'LineWidth', 0.5, ...
+    'HandleVisibility', 'off');
+hold on;
+validReferenceTimes = referenceTimeS(validMask);
+validAlgorithmTimes = algorithmTimeS(validMask);
+referenceMarkerY = interp1(timeAxis, teo_val, validReferenceTimes, ...
+    'nearest', NaN);
+algorithmMarkerY = interp1(timeAxis, teo_val, validAlgorithmTimes, ...
+    'nearest', NaN);
+scatter(validReferenceTimes, referenceMarkerY, 28, [0.1 0.6 0.2], ...
+    'filled', 'DisplayName', 'Reference TEO peak');
+scatter(validAlgorithmTimes, algorithmMarkerY, 28, [0.85 0.15 0.15], ...
+    'x', 'LineWidth', 1.2, 'DisplayName', 'IPI-template location');
+xlabel('Time (s)');
+ylabel('TEO Energy');
+title('PulseTrain TEO: algorithm positions vs. exact-reference positions');
+legend('Location', 'best');
+grid on;
+
+nexttile(reportLayout, 2);
+plot(pulseNumbers(validMask), signedErrorMs(validMask), '-o', ...
+    'Color', [0 0.4470 0.7410], 'MarkerFaceColor', [0 0.4470 0.7410]);
+yline(0, '--k');
+xlabel('Pulse Number');
+ylabel('Signed Error (ms)');
+title('Per-pulse signed location error (algorithm - reference)');
+grid on;
+
+nexttile(reportLayout, 3);
+if validCount > 0
+    histogram(validAbsErrorsMs, 'FaceColor', [0.8500 0.3250 0.0980]);
+else
+    text(0.5, 0.5, 'No valid exact-reference matches', ...
+        'HorizontalAlignment', 'center');
+    xlim([0 1]);
+    ylim([0 1]);
+end
+xlabel('Absolute Error (ms)');
+ylabel('Pulse Count');
+title(sprintf(['Absolute error distribution | Valid %d/%d | ', ...
+    'MAE %.6f ms | RMSE %.6f ms'], ...
+    validCount, reportCount, maeMs, rmseMs));
+grid on;
+
+title(reportLayout, 'Pulse Location Accuracy Report');
+exportgraphics(reportFigure, reportPngPath, 'Resolution', 200);
+close(reportFigure);
+
+fprintf('Report 生成完成:\n');
+fprintf('  CSV: %s\n', reportCsvPath);
+fprintf('  PNG: %s\n', reportPngPath);
+fprintf('  TXT: %s\n', reportTxtPath);
+fprintf('  有效唯一匹配: %d/%d\n', validCount, reportCount);
+
+%% Report 辅助函数
+function exactStarts = localFindExactWaveformStarts(longSignal, shortSignal)
+% 使用高幅值锚点缩小候选范围，再执行逐样本完全一致检查。
+    longLength = size(longSignal, 1);
+    shortLength = size(shortSignal, 1);
+    exactStarts = zeros(0, 1);
+
+    anchorSignal = shortSignal(:, 1);
+    [~, anchorOrder] = sort(abs(anchorSignal), 'descend');
+    anchorCount = min(6, shortLength);
+    anchorOffsets = anchorOrder(1:anchorCount);
+
+    firstOffset = anchorOffsets(1);
+    candidateStarts = find(longSignal(:, 1) == anchorSignal(firstOffset)) ...
+        - firstOffset + 1;
+    candidateStarts = candidateStarts(candidateStarts >= 1 & ...
+        candidateStarts + shortLength - 1 <= longLength);
+
+    for anchorIndex = 2:numel(anchorOffsets)
+        offset = anchorOffsets(anchorIndex);
+        if isempty(candidateStarts)
+            return;
+        end
+        keepMask = longSignal(candidateStarts + offset - 1, 1) == ...
+            anchorSignal(offset);
+        candidateStarts = candidateStarts(keepMask);
+    end
+
+    for candidateIndex = 1:numel(candidateStarts)
+        candidateStart = candidateStarts(candidateIndex);
+        candidateEnd = candidateStart + shortLength - 1;
+        if isequal(longSignal(candidateStart:candidateEnd, :), shortSignal)
+            exactStarts(end + 1, 1) = candidateStart; %#ok<AGROW>
+        end
+    end
+end

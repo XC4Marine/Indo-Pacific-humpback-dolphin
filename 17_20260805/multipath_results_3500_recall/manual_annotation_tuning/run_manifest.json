@@ -1,0 +1,19 @@
+{
+  "annotation_path": "D:\\Project_Github\\Indo-Pacific-humpback-dolphin\\17_20260805\\multipath_results_3500_recall\\manual_multipath_annotations.csv",
+  "annotation_rows": 199,
+  "folds": 5,
+  "group_columns": [
+    "voyage",
+    "pulse_train"
+  ],
+  "match_tolerance_us": 50.0,
+  "selection_metric": "path_level_f2",
+  "tie_breakers": [
+    "precision",
+    "delay_mae_us",
+    "exact_count_accuracy",
+    "no_multipath_specificity"
+  ],
+  "candidate_config_count": 15120,
+  "final_config_name": "config_00311"
+}

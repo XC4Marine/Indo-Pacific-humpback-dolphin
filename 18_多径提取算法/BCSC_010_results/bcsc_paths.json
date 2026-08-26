@@ -1,0 +1,54 @@
+{
+  "record": "010 | Voyage_Ori_01 / PulseTrain_014 / Click_008",
+  "input_wav": "D:\\Project_Github\\Indo-Pacific-humpback-dolphin\\00_Data\\Positive_Clicks_3500\\Voyage_Ori_01\\PulseTrain_014\\Click_008\\Pulse_008.wav",
+  "sample_rate_hz": 576000,
+  "atom_duration_ms": 0.2517361111111111,
+  "explained_variance": 0.8846664680247489,
+  "paths": [
+    {
+      "path": "direct",
+      "arrival_sample": 2880,
+      "arrival_time_ms": 5.0,
+      "relative_delay_ms": 0.0,
+      "signed_coefficient": -1.9949778917732577,
+      "relative_amplitude": 0.9999999999994987,
+      "relative_level_db": 4.331758979756286e-12
+    },
+    {
+      "path": "multipath_1",
+      "arrival_sample": 2948,
+      "arrival_time_ms": 5.118055555555555,
+      "relative_delay_ms": 0.11805555555555557,
+      "signed_coefficient": 0.5876482932023415,
+      "relative_amplitude": 0.29456381227348305,
+      "relative_level_db": -10.616412162416527
+    },
+    {
+      "path": "multipath_2",
+      "arrival_sample": 3016,
+      "arrival_time_ms": 5.236111111111112,
+      "relative_delay_ms": 0.23611111111111113,
+      "signed_coefficient": 0.05215584008013559,
+      "relative_amplitude": 0.02614356795390357,
+      "relative_level_db": -31.652702843614307
+    },
+    {
+      "path": "multipath_3",
+      "arrival_sample": 3611,
+      "arrival_time_ms": 6.269097222222222,
+      "relative_delay_ms": 1.2690972222222223,
+      "signed_coefficient": 0.03681726227166679,
+      "relative_amplitude": 0.018454972570609747,
+      "relative_level_db": -34.677731918613176
+    },
+    {
+      "path": "multipath_4",
+      "arrival_sample": 4435,
+      "arrival_time_ms": 7.699652777777778,
+      "relative_delay_ms": 2.6996527777777777,
+      "signed_coefficient": 0.12086008804980634,
+      "relative_amplitude": 0.06058216912986337,
+      "relative_level_db": -24.35310361818162
+    }
+  ]
+}

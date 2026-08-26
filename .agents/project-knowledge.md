@@ -100,3 +100,45 @@
 - [x] 11_ChannelMetrics: 基于校准直达时间输出 18116 直达 + 15373 多径信道参数, AmpRatio<0.9 残留异常径 0
 - [x] 13_Negative: 长录音 Hard Negatives 自动挖掘完成，默认以 AllTrain.csv 构建排他保护带；当前推荐结果为 `13_Negative_Bandpass_20k_190k_NoHFER`，输出 90,580 个负样本，CSV 不含 HFER
 - [x] 15: 新增 click 分段聚类 CSV 参数时序绘图脚本，默认读取 `12_ClickSegmentClustering/outputs_100us/Pulse_027_segments_dbscan.csv`
+
+## 定向滤波多径提取（2026-08-06）
+
+- 输入：`D:\Project_Github\Indo-Pacific-humpback-dolphin\00_Data\Positive_Clicks_3500`，共3500条、576 kHz单通道WAV。
+- 可运行Notebook：`D:\Project_Github\Indo-Pacific-humpback-dolphin\17_20260805\multiExtract_tuned_3500.ipynb`；保留原Notebook不覆盖。
+- 结果目录：`D:\Project_Github\Indo-Pacific-humpback-dolphin\17_20260805\multipath_results_3500`。
+- 检测/评分/识别信号统一使用 `x_detect`：20 kHz Butterworth高通（原型阶数2）串联185–215 kHz Butterworth带阻（原型阶数2），均为SOS与 `sosfiltfilt` 零相位；`x_raw` 仅用于滤波审计。
+- 最终检测参数：片段50 μs、中心搜索半宽0.5 ms、主到达保护区100 μs、最大时延1 ms、候选最小间距50 μs、MAD峰高/显著性系数5/3、最低SNR 6 dB、最低NCC 0.55、最低频谱余弦0.70、最低评分0.60、权重0.20/0.50/0.30、最多两条多径。
+- 全量结果：3500/3500成功；0/1/2条多径分别为2426/935/139个文件，共导出4713个路径WAV；每条29采样点、576 kHz、单通道PCM16，保持文件内相对幅度，不做逐路径归一化。
+- 合成验收：延迟定位误差0采样点，±50 μs外振铃比例0.004419；全量结构和路径WAV一致性验收通过。
+- 滤波审计：383条强200 kHz背景样本的185–215 kHz能量衰减中位数约22.78 dB；背景RMS中位下降约4.70 dB；30–180 kHz主体频谱余弦第5百分位0.999145。
+- 固定200条审查集生成400张诊断图。当前无逐路径人工真值或双人盲审标签，98%/90%仅作为操作性视觉验收目标，不应作为独立统计准确率引用。
+
+## 召回型多径二次实验（2026-08-06）
+
+- 为回应诊断图中明显延迟到达漏选的问题，保留原1 ms精确率优先结果，新增Notebook：`D:\Project_Github\Indo-Pacific-humpback-dolphin\17_20260805\multiExtract_tuned_3500_recall.ipynb`。
+- 新结果目录：`D:\Project_Github\Indo-Pacific-humpback-dolphin\17_20260805\multipath_results_3500_recall`。
+- 召回型参数：最大时延2 ms、MAD峰高/显著性4/2、最低SNR 6 dB、NCC 0.50、频谱余弦0.60、评分0.55；片段50 μs、中心窗0.5 ms、保护区100 μs及权重0.20/0.50/0.30保持不变。
+- 全量消融：严格门限+1 ms为1213条多径；严格门限+2 ms为2278条；放宽门限+1 ms为2015条；放宽门限+2 ms为3625条。
+- 最终召回型结果：3500/3500成功；0/1/2条多径文件数1029/1317/1154；共导出7125个路径WAV，其中3500条主到达、3625条多径。
+- 1–2 ms区间选中339条路径；其中335条取得下一次IPI，均早于下一次click，已知最小下一次IPI为8.8 ms，因此当前3500条数据中2 ms搜索窗未与相邻click重叠。
+- 召回型结果相对基线有1864个文件增加路径、6个文件减少路径。固定200条审查集的旧ACF一致性代理下降，表明召回提高同时增加伪多径风险；旧ACF不是人工真值。
+- 新增 `full_ablation.csv`、`baseline_comparison.csv` 和 `delay_ipi_audit.csv`，用于区分时延范围、门限放宽及相邻click风险。
+
+## BCSC–Transformer 二分类与捷径学习（2026-08-14）
+
+- 可复现实验入口：`D:\Project_Github\Indo-Pacific-humpback-dolphin\19_20260813\bcsc_transformer_binary_classification.ipynb`；核心流水线：`D:\Project_Github\Indo-Pacific-humpback-dolphin\19_20260813\bcsc_transformer_pipeline.py`；配置哈希：`33ce6ffa3ab921bc`。
+- 数据固定为3500条 `Positive_Clicks_3500` 正样本与3500条来源匹配负样本。负样本从原始长录音重新截取，正负统一预处理，从而避免已有负样本带通和边界截短形成制作流程捷径。
+- 数据折分按 `Ori_file_num` 来源组隔离为5折；当前验收来源泄漏为0，测试预测覆盖7000条样本×3个模型，共21000行。
+- BCSC完整保留7000条状态，6995条为 `ok`（99.93%），5条负样本为 `unstable_direct`；高置信度次到达候选5237条。7/8扰动复现只代表算法稳定性，不代表真实传播路径的后验概率；负样本结果必须称为主/次到达候选。
+- 五折主结果：波形AUROC 0.9803，直达+多径显式特征0.9403，仅直达显式特征0.9301。波形模型仅背景残差AUROC 0.9265，背景交换预测翻转率18.19%，支持存在背景捷径信息。
+- 显式多径相对仅直达的配对AUROC差值为+0.0067，录音组Bootstrap 95% CI [-0.0039, 0.0164]；点估计为正但统计证据不明确。保留掩码并清零多径数值后AUROC降至0.9163，说明多径数值属性具有辅助信息，但不等同于证明物理多径真实性。
+- 研究报告与全部清单、特征、模型、预测、指标及图表位于 `D:\Project_Github\Indo-Pacific-humpback-dolphin\19_20260813\outputs`；报告主文件为 `research_report.md`。
+
+## 信号—噪声可分性与背景捷径确认（2026-08-18）
+
+- 独立审计入口：`D:\Project_Github\Indo-Pacific-humpback-dolphin\19_20260813\signal_noise_shortcut_audit.ipynb`；流水线：`D:\Project_Github\Indo-Pacific-humpback-dolphin\19_20260813\shortcut_audit_pipeline.py`；配置哈希：`f047e9f9acace257`。
+- 正负样本均从 `00_Data\original_audio` 重截5761点、576 kHz并统一预处理；正样本经 `pulse_precise_positions.txt` 与 `ClickTrains.csv` 映射为原始录音时间，3500/3500覆盖。
+- 严格匹配队列从90580条负候选中按录音编号一对一无放回匹配，倾向分逻辑回归+0.2 SD caliper；实际3370对，局部SNR SMD未达标，报告标记严格匹配不可行。
+- 七条件使用相同WaveformTransformer/种子/预算/来源隔离五折；简单基线为逻辑回归与浅层梯度提升，仅训练于严格匹配队列。
+- 结果：信号区AUROC显著>0.5（形态本身可分）；宽窗口背景AUROC CI下限未>0.5（无背景类别信息）；BCSC残差未显著优于背景（未证实残差泄漏）；严格匹配后全波形显著下降（原任务受SNR/幅度/频谱不平衡影响）。
+- 遮罩合成与BCSC合成自检均通过；输出含匹配清单、波形缓存、特征、折分、模型、预测、指标、Bootstrap与PNG图。

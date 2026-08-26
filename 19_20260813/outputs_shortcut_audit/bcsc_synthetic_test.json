@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "delay_ms": 0.3506944444444444,
+  "target_delay_ms": 0.35,
+  "error_ms": 0.000694444444444442,
+  "tolerance_ms": 0.03,
+  "status": "ok",
+  "direct_index": 2883,
+  "multipath_index": 3085,
+  "candidate_count": 2,
+  "stable_multipath_count": 1
+}

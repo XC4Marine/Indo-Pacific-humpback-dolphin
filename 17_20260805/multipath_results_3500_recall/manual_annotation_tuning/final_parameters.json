@@ -1,0 +1,17 @@
+{
+  "segment_us": 25.0,
+  "center_search_half_width_ms": 0.1,
+  "direct_guard_us": 30.0,
+  "max_delay_ms": 1.0,
+  "candidate_min_distance_us": 25.0,
+  "peak_height_mad_factor": 4.0,
+  "peak_prominence_mad_factor": 2.0,
+  "min_candidate_snr_db": 0.0,
+  "min_abs_ncc": 0.2,
+  "min_spectral_cosine": 0.25,
+  "min_accept_score": 0.25,
+  "weight_energy": 0.3,
+  "weight_ncc": 0.4,
+  "weight_spectral": 0.3,
+  "max_multipaths": 2
+}

@@ -1,0 +1,72 @@
+{
+  "input_dir": "D:\\Project_Github\\Indo-Pacific-humpback-dolphin\\00_Data\\Positive_Clicks_3500",
+  "output_dir": "D:\\Project_Github\\Indo-Pacific-humpback-dolphin\\17_20260805\\multipath_results_3500_recall",
+  "signal_used_for_detection_scoring_and_recognition": "x_detect_filtered",
+  "filter": {
+    "kind": "Butterworth SOS + zero-phase sosfiltfilt",
+    "high_pass_hz": 20000.0,
+    "high_pass_butter_prototype_order": 2,
+    "bandstop_low_hz": 185000.0,
+    "bandstop_high_hz": 215000.0,
+    "bandstop_butter_prototype_order": 2
+  },
+  "detection": {
+    "segment_us": 50.0,
+    "center_search_half_width_ms": 0.5,
+    "direct_guard_us": 100.0,
+    "max_delay_ms": 2.0,
+    "candidate_min_distance_us": 50.0,
+    "peak_height_mad_factor": 4.0,
+    "peak_prominence_mad_factor": 2.0,
+    "min_candidate_snr_db": 6.0,
+    "min_abs_ncc": 0.5,
+    "min_spectral_cosine": 0.6,
+    "min_accept_score": 0.55,
+    "weight_energy": 0.2,
+    "weight_ncc": 0.5,
+    "weight_spectral": 0.3,
+    "max_multipaths": 2
+  },
+  "baseline_comparison": {
+    "baseline_multipath_total": 1213,
+    "recall_multipath_total": 3625,
+    "files_with_more_paths": 1864,
+    "files_with_fewer_paths": 6,
+    "selected_paths_between_1_and_2_ms": 339
+  },
+  "delay_ipi_audit": {
+    "selected_paths_between_1_and_2_ms": 339,
+    "known_next_ipi_count": 335,
+    "next_ipi_at_or_below_selected_delay": 0,
+    "minimum_known_next_ipi_ms": 8.8
+  },
+  "synthetic_tests": {
+    "sample_rate": 576000,
+    "expected_delay_samples": 230,
+    "detected_delay_samples": 230,
+    "delay_error_samples": 0,
+    "ringing_outside_50us_ratio": 0.004419284969197391,
+    "synthetic_low_frequency_ratio_before": 0.5236151203586487,
+    "synthetic_low_frequency_ratio_after": 0.004792148514811514,
+    "synthetic_185_215_ratio_before": 0.41015676355507624,
+    "synthetic_185_215_ratio_after": 0.004675451669489375,
+    "passed": true
+  },
+  "validation": {
+    "input_wav_count": 3500,
+    "successful_file_count": 3500,
+    "failed_file_count": 0,
+    "selected_path_rows": 7125,
+    "selected_multipath_rows": 3625,
+    "candidate_rows": 10211,
+    "multipath_count_distribution": {
+      "0": 1029,
+      "1": 1317,
+      "2": 1154
+    },
+    "missing_path_wavs": 0,
+    "invalid_path_wavs": 0,
+    "issues": [],
+    "passed": true
+  }
+}

@@ -1,0 +1,143 @@
+PulseTrain 批量定位误差 Report
+================================
+PulseTrain 总数: 832
+成功生成误差统计: 832
+处理失败: 0
+参考匹配不完整: 1
+忽略的缺失参考 WAV: 14
+逐样本精确参考匹配: 9405
+局部 NCC 后备参考匹配: 8998
+阻止旧逻辑部分模板越界: 29
+MAE 中位数: 0.004629630 ms
+MAE MAD: 0.001901455 ms
+高 MAE 离群阈值: 0.013086921 ms
+高 MAE 离群 PulseTrain: 50
+
+其中系统性固定偏移: 32
+判读: systematic_offset 表示正负误差没有相互抵消，通常说明模板稳定选择了主峰之后或之前的另一组重复 TEO 结构，而不是 IPI 累积漂移。
+
+按 MAE 排序的前 30 个 PulseTrain
+--------------------------------
+PulseTrain_513: MAE=0.322569444 ms, Bias=0.322569444 ms, Std=0.005423784 ms, Max=0.329861111 ms, Matched=10/10 available, Exact=0, NCC=10, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_511: MAE=0.289236111 ms, Bias=0.289236111 ms, Std=0.001770493 ms, Max=0.291666667 ms, Matched=5/5 available, Exact=0, NCC=5, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_691: MAE=0.200892857 ms, Bias=0.200892857 ms, Std=0.003678670 ms, Max=0.206597222 ms, Matched=7/7 available, Exact=0, NCC=7, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_039: MAE=0.188657407 ms, Bias=0.188657407 ms, Std=0.003374393 ms, Max=0.194444444 ms, Matched=9/9 available, Exact=0, NCC=9, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_067: MAE=0.178626543 ms, Bias=0.178626543 ms, Std=0.006256665 ms, Max=0.190972222 ms, Matched=18/18 available, Exact=0, NCC=18, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_290: MAE=0.144495081 ms, Bias=0.144495081 ms, Std=0.006037404 ms, Max=0.163194444 ms, Matched=48/48 available, Exact=0, NCC=48, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_286: MAE=0.093055556 ms, Bias=0.093055556 ms, Std=0.002354976 ms, Max=0.095486111 ms, Matched=5/5 available, Exact=0, NCC=5, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_566: MAE=0.039166030 ms, Bias=0.038911188 ms, Std=0.028869478 ms, Max=0.088541667 ms, Matched=109/109 available, Exact=0, NCC=109, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_170: MAE=0.027209596 ms, Bias=-0.026862374 ms, Std=0.017841690 ms, Max=0.059027778 ms, Matched=110/110 available, Exact=110, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_609: MAE=0.026706560 ms, Bias=0.024342494 ms, Std=0.022435470 ms, Max=0.067708333 ms, Matched=47/47 available, Exact=0, NCC=47, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_357: MAE=0.026411052 ms, Bias=-0.025598404 ms, Std=0.023872869 ms, Max=0.083333333 ms, Matched=47/47 available, Exact=0, NCC=47, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_648: MAE=0.026319444 ms, Bias=0.024791667 ms, Std=0.018379965 ms, Max=0.053819444 ms, Matched=50/53 available, Exact=0, NCC=50, Review=True, Reason=reference_match_failures=3;high_mae_outlier;systematic_offset
+PulseTrain_420: MAE=0.023308215 ms, Bias=0.022569444 ms, Std=0.018148515 ms, Max=0.050347222 ms, Matched=47/47 available, Exact=47, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_157: MAE=0.021122685 ms, Bias=0.020957341 ms, Std=0.012860805 ms, Max=0.052083333 ms, Matched=84/84 available, Exact=0, NCC=84, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_110: MAE=0.020961257 ms, Bias=0.017562135 ms, Std=0.021170012 ms, Max=0.059027778 ms, Matched=95/95 available, Exact=95, NCC=0, Review=True, Reason=high_mae_outlier
+PulseTrain_563: MAE=0.020161290 ms, Bias=0.017921147 ms, Std=0.019673446 ms, Max=0.048611111 ms, Matched=31/31 available, Exact=0, NCC=31, Review=True, Reason=high_mae_outlier
+PulseTrain_328: MAE=0.020124218 ms, Bias=0.017923513 ms, Std=0.018672986 ms, Max=0.055555556 ms, Matched=71/71 available, Exact=71, NCC=0, Review=True, Reason=high_mae_outlier
+PulseTrain_249: MAE=0.020102339 ms, Bias=0.019645468 ms, Std=0.015661027 ms, Max=0.046875000 ms, Matched=38/38 available, Exact=38, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_204: MAE=0.019909870 ms, Bias=0.017989066 ms, Std=0.016295714 ms, Max=0.045138889 ms, Matched=94/94 available, Exact=94, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_366: MAE=0.019593254 ms, Bias=-0.019593254 ms, Std=0.013824076 ms, Max=0.039930556 ms, Matched=35/35 available, Exact=0, NCC=35, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_223: MAE=0.019486351 ms, Bias=-0.019067289 ms, Std=0.017656407 ms, Max=0.050347222 ms, Matched=58/58 available, Exact=58, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_330: MAE=0.019097222 ms, Bias=0.018398543 ms, Std=0.009965308 ms, Max=0.032986111 ms, Matched=164/164 available, Exact=164, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_046: MAE=0.018460648 ms, Bias=0.017418981 ms, Std=0.013391584 ms, Max=0.043402778 ms, Matched=60/60 available, Exact=60, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_262: MAE=0.018115942 ms, Bias=0.016945954 ms, Std=0.015007616 ms, Max=0.043402778 ms, Matched=92/92 available, Exact=92, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_349: MAE=0.017824867 ms, Bias=-0.015089897 ms, Std=0.016934403 ms, Max=0.071180556 ms, Matched=146/146 available, Exact=0, NCC=146, Review=True, Reason=high_mae_outlier
+PulseTrain_587: MAE=0.017361111 ms, Bias=0.016666667 ms, Std=0.013806177 ms, Max=0.039930556 ms, Matched=20/20 available, Exact=20, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+PulseTrain_448: MAE=0.016769772 ms, Bias=-0.011296094 ms, Std=0.016686635 ms, Max=0.052083333 ms, Matched=229/229 available, Exact=229, NCC=0, Review=True, Reason=high_mae_outlier
+PulseTrain_647: MAE=0.016220724 ms, Bias=0.014416531 ms, Std=0.017391363 ms, Max=0.053819444 ms, Matched=102/102 available, Exact=102, NCC=0, Review=True, Reason=high_mae_outlier
+PulseTrain_548: MAE=0.015992254 ms, Bias=0.002904647 ms, Std=0.018089428 ms, Max=0.031250000 ms, Matched=52/52 available, Exact=0, NCC=52, Review=True, Reason=high_mae_outlier
+PulseTrain_148: MAE=0.015922172 ms, Bias=0.015484234 ms, Std=0.010466429 ms, Max=0.034722222 ms, Matched=111/111 available, Exact=111, NCC=0, Review=True, Reason=high_mae_outlier;systematic_offset
+
+全部高 MAE 离群 PulseTrain
+--------------------------------
+PulseTrain_513: MAE=0.322569444 ms, Bias=0.322569444 ms, Std=0.005423784 ms, Max=0.329861111 ms
+PulseTrain_511: MAE=0.289236111 ms, Bias=0.289236111 ms, Std=0.001770493 ms, Max=0.291666667 ms
+PulseTrain_691: MAE=0.200892857 ms, Bias=0.200892857 ms, Std=0.003678670 ms, Max=0.206597222 ms
+PulseTrain_039: MAE=0.188657407 ms, Bias=0.188657407 ms, Std=0.003374393 ms, Max=0.194444444 ms
+PulseTrain_067: MAE=0.178626543 ms, Bias=0.178626543 ms, Std=0.006256665 ms, Max=0.190972222 ms
+PulseTrain_290: MAE=0.144495081 ms, Bias=0.144495081 ms, Std=0.006037404 ms, Max=0.163194444 ms
+PulseTrain_286: MAE=0.093055556 ms, Bias=0.093055556 ms, Std=0.002354976 ms, Max=0.095486111 ms
+PulseTrain_566: MAE=0.039166030 ms, Bias=0.038911188 ms, Std=0.028869478 ms, Max=0.088541667 ms
+PulseTrain_170: MAE=0.027209596 ms, Bias=-0.026862374 ms, Std=0.017841690 ms, Max=0.059027778 ms
+PulseTrain_609: MAE=0.026706560 ms, Bias=0.024342494 ms, Std=0.022435470 ms, Max=0.067708333 ms
+PulseTrain_357: MAE=0.026411052 ms, Bias=-0.025598404 ms, Std=0.023872869 ms, Max=0.083333333 ms
+PulseTrain_648: MAE=0.026319444 ms, Bias=0.024791667 ms, Std=0.018379965 ms, Max=0.053819444 ms
+PulseTrain_420: MAE=0.023308215 ms, Bias=0.022569444 ms, Std=0.018148515 ms, Max=0.050347222 ms
+PulseTrain_157: MAE=0.021122685 ms, Bias=0.020957341 ms, Std=0.012860805 ms, Max=0.052083333 ms
+PulseTrain_110: MAE=0.020961257 ms, Bias=0.017562135 ms, Std=0.021170012 ms, Max=0.059027778 ms
+PulseTrain_563: MAE=0.020161290 ms, Bias=0.017921147 ms, Std=0.019673446 ms, Max=0.048611111 ms
+PulseTrain_328: MAE=0.020124218 ms, Bias=0.017923513 ms, Std=0.018672986 ms, Max=0.055555556 ms
+PulseTrain_249: MAE=0.020102339 ms, Bias=0.019645468 ms, Std=0.015661027 ms, Max=0.046875000 ms
+PulseTrain_204: MAE=0.019909870 ms, Bias=0.017989066 ms, Std=0.016295714 ms, Max=0.045138889 ms
+PulseTrain_366: MAE=0.019593254 ms, Bias=-0.019593254 ms, Std=0.013824076 ms, Max=0.039930556 ms
+PulseTrain_223: MAE=0.019486351 ms, Bias=-0.019067289 ms, Std=0.017656407 ms, Max=0.050347222 ms
+PulseTrain_330: MAE=0.019097222 ms, Bias=0.018398543 ms, Std=0.009965308 ms, Max=0.032986111 ms
+PulseTrain_046: MAE=0.018460648 ms, Bias=0.017418981 ms, Std=0.013391584 ms, Max=0.043402778 ms
+PulseTrain_262: MAE=0.018115942 ms, Bias=0.016945954 ms, Std=0.015007616 ms, Max=0.043402778 ms
+PulseTrain_349: MAE=0.017824867 ms, Bias=-0.015089897 ms, Std=0.016934403 ms, Max=0.071180556 ms
+PulseTrain_587: MAE=0.017361111 ms, Bias=0.016666667 ms, Std=0.013806177 ms, Max=0.039930556 ms
+PulseTrain_448: MAE=0.016769772 ms, Bias=-0.011296094 ms, Std=0.016686635 ms, Max=0.052083333 ms
+PulseTrain_647: MAE=0.016220724 ms, Bias=0.014416531 ms, Std=0.017391363 ms, Max=0.053819444 ms
+PulseTrain_548: MAE=0.015992254 ms, Bias=0.002904647 ms, Std=0.018089428 ms, Max=0.031250000 ms
+PulseTrain_148: MAE=0.015922172 ms, Bias=0.015484234 ms, Std=0.010466429 ms, Max=0.034722222 ms
+PulseTrain_065: MAE=0.015801554 ms, Bias=0.014565678 ms, Std=0.011413648 ms, Max=0.032986111 ms
+PulseTrain_361: MAE=0.015538194 ms, Bias=0.014554398 ms, Std=0.011990868 ms, Max=0.036458333 ms
+PulseTrain_403: MAE=0.015309343 ms, Bias=-0.014993687 ms, Std=0.007948029 ms, Max=0.024305556 ms
+PulseTrain_166: MAE=0.015292553 ms, Bias=0.013962766 ms, Std=0.016721206 ms, Max=0.048611111 ms
+PulseTrain_744: MAE=0.015135328 ms, Bias=0.003650285 ms, Std=0.017261980 ms, Max=0.038194444 ms
+PulseTrain_489: MAE=0.014957265 ms, Bias=0.010416667 ms, Std=0.029600176 ms, Max=0.102430556 ms
+PulseTrain_367: MAE=0.014880952 ms, Bias=-0.011904762 ms, Std=0.012704612 ms, Max=0.029513889 ms
+PulseTrain_521: MAE=0.014802632 ms, Bias=0.008040936 ms, Std=0.014733658 ms, Max=0.034722222 ms
+PulseTrain_437: MAE=0.014580817 ms, Bias=-0.011184078 ms, Std=0.013397446 ms, Max=0.034722222 ms
+PulseTrain_400: MAE=0.014501634 ms, Bias=0.010212418 ms, Std=0.016284885 ms, Max=0.034722222 ms
+PulseTrain_644: MAE=0.014501634 ms, Bias=-0.014297386 ms, Std=0.010184807 ms, Max=0.039930556 ms
+PulseTrain_446: MAE=0.014446925 ms, Bias=0.002294147 ms, Std=0.016678376 ms, Max=0.036458333 ms
+PulseTrain_048: MAE=0.014429012 ms, Bias=0.013425926 ms, Std=0.015395694 ms, Max=0.039930556 ms
+PulseTrain_379: MAE=0.014412998 ms, Bias=-0.014019916 ms, Std=0.011672278 ms, Max=0.036458333 ms
+PulseTrain_082: MAE=0.013764881 ms, Bias=-0.011284722 ms, Std=0.011987790 ms, Max=0.034722222 ms
+PulseTrain_474: MAE=0.013755342 ms, Bias=0.003231838 ms, Std=0.018680816 ms, Max=0.105902778 ms
+PulseTrain_720: MAE=0.013733416 ms, Bias=-0.012645108 ms, Std=0.011639642 ms, Max=0.045138889 ms
+PulseTrain_321: MAE=0.013663420 ms, Bias=0.013144841 ms, Std=0.010027718 ms, Max=0.043402778 ms
+PulseTrain_342: MAE=0.013330853 ms, Bias=-0.010850694 ms, Std=0.012813537 ms, Max=0.029513889 ms
+PulseTrain_020: MAE=0.013228245 ms, Bias=-0.006468166 ms, Std=0.015202322 ms, Max=0.038194444 ms
+
+旧逻辑会发生部分模板越界的 PulseTrain（已被修正）
+--------------------------------
+PulseTrain_005: old_lag=188, new_lag=66, MAE=0.002314815 ms
+PulseTrain_037: old_lag=138, new_lag=60, MAE=0.003819444 ms
+PulseTrain_064: old_lag=209, new_lag=51, MAE=0.006712963 ms
+PulseTrain_120: old_lag=190, new_lag=74, MAE=0.007109788 ms
+PulseTrain_165: old_lag=185, new_lag=59, MAE=0.003472222 ms
+PulseTrain_428: old_lag=1038, new_lag=61, MAE=0.003279321 ms
+PulseTrain_430: old_lag=3644, new_lag=58, MAE=0.002430556 ms
+PulseTrain_431: old_lag=70272, new_lag=59, MAE=0.002232143 ms
+PulseTrain_447: old_lag=36282, new_lag=58, MAE=0.002314815 ms
+PulseTrain_545: old_lag=-8418, new_lag=58, MAE=0.001736111 ms
+PulseTrain_557: old_lag=5272, new_lag=5038, MAE=0.008409288 ms
+PulseTrain_565: old_lag=-72580, new_lag=54, MAE=0.004960317 ms
+PulseTrain_591: old_lag=292, new_lag=53, MAE=0.008858618 ms
+PulseTrain_592: old_lag=204, new_lag=55, MAE=0.002700617 ms
+PulseTrain_610: old_lag=44191, new_lag=54, MAE=0.002893519 ms
+PulseTrain_612: old_lag=26414, new_lag=56, MAE=0.001736111 ms
+PulseTrain_614: old_lag=-56892, new_lag=53, MAE=0.004774306 ms
+PulseTrain_619: old_lag=-22643, new_lag=61, MAE=0.006597222 ms
+PulseTrain_621: old_lag=254, new_lag=58, MAE=0.002951389 ms
+PulseTrain_625: old_lag=2158, new_lag=55, MAE=0.000868056 ms
+PulseTrain_626: old_lag=252, new_lag=55, MAE=0.003761574 ms
+PulseTrain_637: old_lag=36122, new_lag=58, MAE=0.002025463 ms
+PulseTrain_655: old_lag=98998, new_lag=51, MAE=0.006727431 ms
+PulseTrain_678: old_lag=-38627, new_lag=52, MAE=0.003125000 ms
+PulseTrain_683: old_lag=33579, new_lag=59, MAE=0.002083333 ms
+PulseTrain_694: old_lag=105714, new_lag=37, MAE=0.012259070 ms
+PulseTrain_709: old_lag=38170, new_lag=55, MAE=0.003038194 ms
+PulseTrain_716: old_lag=682, new_lag=58, MAE=0.004123264 ms
+PulseTrain_755: old_lag=36581, new_lag=56, MAE=0.002893519 ms
+
+参考文件不完整的 PulseTrain
+--------------------------------
+PulseTrain_648: Matched=50/53 available, Reason=reference_match_failures=3
+
+已忽略缺失参考 WAV 的 PulseTrain
+--------------------------------
+PulseTrain_436: IgnoredMissing=14, Matched=23/23 available

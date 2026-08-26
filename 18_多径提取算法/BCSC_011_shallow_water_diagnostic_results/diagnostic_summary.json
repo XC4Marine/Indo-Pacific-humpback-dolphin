@@ -1,0 +1,112 @@
+{
+  "record": "Voyage_Ori_01 / PulseTrain_014",
+  "target_click": "Click_008",
+  "sample_rate_hz": 576000,
+  "n_clicks": 9,
+  "selected_configuration": {
+    "atom_duration_ms": 0.4010416666666667,
+    "lambda_ratio": 0.01875,
+    "selection_rule": "within 0.03 of maximum explained variance, then minimum block K90, residual-atom correlation, and maximum explained variance"
+  },
+  "best_multistart_metrics": {
+    "explained_variance": 0.9548054590499897,
+    "k90": 12,
+    "k95": 21,
+    "block_k90": 2,
+    "tail_k90": 42,
+    "tail_block_k90": 7,
+    "tail_energy_fraction": 0.049755225490578675,
+    "hoyer": 0.9366309931385899,
+    "gini": 0.9905959166256586,
+    "residual_atom_correlation": 0.0458589080604336,
+    "n_detected_peaks": 23,
+    "delays_ms": [
+      0.0,
+      0.04513888888888889,
+      0.11458333333333333,
+      0.19444444444444442,
+      0.23611111111111113,
+      0.3125,
+      0.4618055555555556,
+      1.2083333333333335,
+      1.246527777777778,
+      1.2847222222222223,
+      1.3524305555555556,
+      1.3975694444444444,
+      1.4583333333333335,
+      1.6475694444444444,
+      1.715277777777778,
+      1.828125,
+      2.6614583333333335,
+      2.6996527777777777,
+      2.741319444444444,
+      2.8159722222222223,
+      2.911458333333333,
+      3.109375,
+      3.3020833333333335
+    ],
+    "relative_amplitudes": [
+      0.9999999999999986,
+      0.036555036106752946,
+      0.15068593954420514,
+      0.02903510454167645,
+      0.07489512915100818,
+      0.031754006244163996,
+      0.019454548615417625,
+      0.04928636558782045,
+      0.15795345244678083,
+      0.03714129615665459,
+      0.059911330538374455,
+      0.07033896036846123,
+      0.020165924993057423,
+      0.023847415067630388,
+      0.019011360925216828,
+      0.030832720595511263,
+      0.06455962934641352,
+      0.15900280713446416,
+      0.04270023612755174,
+      0.03263774502914981,
+      0.02761215915000775,
+      0.016789125761984387,
+      0.01973936936635816
+    ]
+  },
+  "candidate_stability": [
+    {
+      "reference_delay_ms": 0.11805555555555557,
+      "grid_support": 0.8,
+      "multistart_support": 0.125,
+      "cross_click_exact_support": 1.0,
+      "cross_click_broad_support": 1.0
+    },
+    {
+      "reference_delay_ms": 0.23611111111111113,
+      "grid_support": 0.44,
+      "multistart_support": 1.0,
+      "cross_click_exact_support": 0.8888888888888888,
+      "cross_click_broad_support": 0.8888888888888888
+    },
+    {
+      "reference_delay_ms": 1.2690972222222223,
+      "grid_support": 0.56,
+      "multistart_support": 1.0,
+      "cross_click_exact_support": 0.8888888888888888,
+      "cross_click_broad_support": 0.8888888888888888
+    },
+    {
+      "reference_delay_ms": 2.6996527777777777,
+      "grid_support": 0.6,
+      "multistart_support": 1.0,
+      "cross_click_exact_support": 0.7777777777777778,
+      "cross_click_broad_support": 0.8888888888888888
+    }
+  ],
+  "joint_mean_explained_variance": 0.9566195503787969,
+  "diagnosis": "检出了较多相邻激活，但能量在少数时间块内集中：当前数据更支持成簇/块稀疏，而不是理想的点稀疏信道。",
+  "recommended_next_model": "下一版优先实现组稀疏/块稀疏BCSC；同时保留弥散残差诊断，暂不必立即增加多原子。",
+  "limitations": [
+    "single-channel blind factorization remains non-identifiable up to shift, sign, scale, and source/channel allocation",
+    "candidate support is algorithmic reproducibility, not a posterior probability of a physical path",
+    "the shared-atom model assumes broadly similar emitted/effective clicks across the train"
+  ]
+}

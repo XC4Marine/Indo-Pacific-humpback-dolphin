@@ -1,0 +1,141 @@
+{
+  "input_wav": "D:\\Project_Github\\Indo-Pacific-humpback-dolphin\\00_Data\\Positive_Clicks_3500\\Voyage_Ori_01\\PulseTrain_014\\Click_008\\Pulse_008.wav",
+  "sample_rate_hz": 576000,
+  "method": "homomorphic cepstrum initialization + minimum entropy deconvolution (MED)",
+  "parameters": {
+    "bandpass_hz": [
+      20000.0,
+      190000.0
+    ],
+    "source_duration_ms": 0.22,
+    "med_filter_length_ms": 0.35,
+    "med_iterations": 80,
+    "med_ridge": 1e-05,
+    "minimum_path_distance_ms": 0.035,
+    "peak_relative_threshold": 0.06,
+    "peak_prominence_ratio": 0.025,
+    "bootstrap_runs": 200,
+    "bootstrap_noise_scale": 1.0,
+    "bootstrap_block_ms": 0.05,
+    "bootstrap_match_tolerance_ms": 0.04,
+    "bootstrap_random_seed": 20260813
+  },
+  "initial_excess_kurtosis": 58.95922305857889,
+  "med_excess_kurtosis": 1138.057246074834,
+  "reconstruction": {
+    "full_med_response_r_squared": 0.5521941408334048,
+    "detected_peaks_sparse_r_squared": 0.5042585344123963,
+    "full_med_response_rmse": 0.023127499987963335,
+    "detected_peaks_sparse_rmse": 0.024333883625797668,
+    "full_alignment_lag_samples": -48,
+    "sparse_alignment_lag_samples": -48,
+    "full_fitted_gain": -0.8359480756884704,
+    "sparse_fitted_gain": -1.5929139652580844
+  },
+  "paths": [
+    {
+      "path": "direct",
+      "sample_index_med": 2713,
+      "arrival_time_ms": 5.059027777777778,
+      "relative_delay_ms": 0.0,
+      "relative_amplitude": 0.99999999998647,
+      "relative_level_db": 0.0,
+      "confidence_percent": 99.0,
+      "bootstrap_matches": 198,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 0.0,
+      "bootstrap_delay_std_ms": 0.0
+    },
+    {
+      "path": "multipath_1",
+      "sample_index_med": 2781,
+      "arrival_time_ms": 5.177083333333333,
+      "relative_delay_ms": 0.11805555555555557,
+      "relative_amplitude": 1.6081318385269767,
+      "relative_level_db": 4.126433007695871,
+      "confidence_percent": 99.0,
+      "bootstrap_matches": 198,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 0.11871317340067342,
+      "bootstrap_delay_std_ms": 0.0011104203976854642
+    },
+    {
+      "path": "multipath_2",
+      "sample_index_med": 2849,
+      "arrival_time_ms": 5.295138888888889,
+      "relative_delay_ms": 0.23611111111111113,
+      "relative_amplitude": 13.529877306723424,
+      "relative_level_db": 22.62587716587898,
+      "confidence_percent": 99.0,
+      "bootstrap_matches": 198,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 0.23675119248035917,
+      "bootstrap_delay_std_ms": 0.0011069355146319357
+    },
+    {
+      "path": "multipath_3",
+      "sample_index_med": 2917,
+      "arrival_time_ms": 5.413194444444445,
+      "relative_delay_ms": 0.3541666666666667,
+      "relative_amplitude": 3.2502253978209787,
+      "relative_level_db": 10.238269592755696,
+      "confidence_percent": 99.0,
+      "bootstrap_matches": 198,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 0.3546489197530864,
+      "bootstrap_delay_std_ms": 0.0012597382316738713
+    },
+    {
+      "path": "multipath_4",
+      "sample_index_med": 3564,
+      "arrival_time_ms": 6.536458333333333,
+      "relative_delay_ms": 1.4774305555555556,
+      "relative_amplitude": 1.9180628477623227,
+      "relative_level_db": 5.6572566656092595,
+      "confidence_percent": 98.5,
+      "bootstrap_matches": 197,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 1.4780650733220528,
+      "bootstrap_delay_std_ms": 0.0011069768284286564
+    },
+    {
+      "path": "multipath_5",
+      "sample_index_med": 3598,
+      "arrival_time_ms": 6.595486111111111,
+      "relative_delay_ms": 1.5364583333333333,
+      "relative_amplitude": 2.520631947275727,
+      "relative_level_db": 8.030188726852218,
+      "confidence_percent": 98.0,
+      "bootstrap_matches": 196,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 1.5382475907029478,
+      "bootstrap_delay_std_ms": 0.001326363289396904
+    },
+    {
+      "path": "multipath_6",
+      "sample_index_med": 3675,
+      "arrival_time_ms": 6.729166666666666,
+      "relative_delay_ms": 1.670138888888889,
+      "relative_amplitude": 0.854835123803894,
+      "relative_level_db": -1.3623528334185273,
+      "confidence_percent": 33.0,
+      "bootstrap_matches": 66,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 1.6690077861952861,
+      "bootstrap_delay_std_ms": 0.007456374039862834
+    },
+    {
+      "path": "multipath_7",
+      "sample_index_med": 4405,
+      "arrival_time_ms": 7.996527777777778,
+      "relative_delay_ms": 2.9375,
+      "relative_amplitude": 2.235386351082587,
+      "relative_level_db": 6.9870518974427895,
+      "confidence_percent": 99.0,
+      "bootstrap_matches": 198,
+      "bootstrap_runs": 200,
+      "bootstrap_delay_mean_ms": 2.938140081369248,
+      "bootstrap_delay_std_ms": 0.001106935514631939
+    }
+  ]
+}

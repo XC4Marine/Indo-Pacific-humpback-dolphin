@@ -1,0 +1,31 @@
+{
+  "mode": "full",
+  "config_hash": "f047e9f9acace257",
+  "positive_time_map": 3500,
+  "matched_pairs": 3370,
+  "strict_matching_feasible": false,
+  "mask_test": {
+    "passed": true,
+    "unchanged_max_abs_diff": 0.0,
+    "boundary_max_jump": 0.004033553414046764,
+    "boundary_threshold": 0.0753685632980866,
+    "ncc_before": 1.0,
+    "ncc_after": 0.012587807401384512,
+    "ncc_drop": 0.9874121925986155,
+    "random_covers_injection": false
+  },
+  "bcsc_ok": 6740,
+  "report_path": "D:\\Project_Github\\Indo-Pacific-humpback-dolphin\\19_20260813\\outputs_shortcut_audit\\research_report.md",
+  "bcsc_synthetic_test": {
+    "passed": true,
+    "delay_ms": 0.3506944444444444,
+    "target_delay_ms": 0.35,
+    "error_ms": 0.000694444444444442,
+    "tolerance_ms": 0.03,
+    "status": "ok",
+    "direct_index": 2883,
+    "multipath_index": 3085,
+    "candidate_count": 2,
+    "stable_multipath_count": 1
+  }
+}
