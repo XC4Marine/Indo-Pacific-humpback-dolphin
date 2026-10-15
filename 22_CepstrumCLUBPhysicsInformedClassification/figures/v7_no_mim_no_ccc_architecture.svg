@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="930" viewBox="0 0 1600 930" role="img" aria-labelledby="title desc">
+  <title id="title">Heterogeneous X/H decomposition network without MIM or CCC</title>
+  <desc id="desc">Publication-ready computation graph for the Experiment 22 v7 no-MIM reference condition. A received waveform feeds unshared X and H branches, which reconstruct click and channel components, convolve into a received reconstruction, and classify through the X latent. Five losses form the total objective.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,3 L0,6 Z" fill="#3F4A54"/></marker>
+    <marker id="dashArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,3 L0,6 Z" fill="#7A8793"/></marker>
+    <style>
+      .bg { fill:#FFFFFF; } .region { fill:#F7F9FA; stroke:#CAD3D8; stroke-width:1.4; }
+      .node { fill:#FFFFFF; stroke:#3F4A54; stroke-width:1.7; } .xnode { fill:#EAF3FB; stroke:#0072B2; stroke-width:1.9; }
+      .hnode { fill:#EEF7F2; stroke:#009E73; stroke-width:1.9; } .op { fill:#FFF8E8; stroke:#C58A00; stroke-width:1.8; }
+      .loss { fill:#F9EEF1; stroke:#B24C63; stroke-width:1.6; } .total { fill:#263845; stroke:#263845; stroke-width:2; }
+      .line { stroke:#3F4A54; stroke-width:2.1; fill:none; marker-end:url(#arrow); } .dash { stroke:#7A8793; stroke-width:1.6; stroke-dasharray:6 5; fill:none; marker-end:url(#dashArrow); }
+      .title { font-family:Arial, 'Noto Sans', sans-serif; font-size:25px; font-weight:700; fill:#1F2933; } .section { font-family:Arial, 'Noto Sans', sans-serif; font-size:15px; font-weight:700; letter-spacing:.8px; fill:#52616B; }
+      .label { font-family:Arial, 'Noto Sans', sans-serif; font-size:17px; font-weight:700; fill:#1F2933; } .small { font-family:Arial, 'Noto Sans', sans-serif; font-size:13px; fill:#44515C; }
+      .math { font-family:'Cambria Math', Cambria, serif; font-size:18px; fill:#1F2933; } .white { font-family:Arial, 'Noto Sans', sans-serif; font-size:18px; font-weight:700; fill:#FFFFFF; }
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="930"/>
+  <text class="title" x="70" y="55">No-MIM reference: heterogeneous X/H decomposition with physical priors</text>
+  <text class="small" x="70" y="82">Training computation graph; solid arrows: forward data flow, dashed arrows: supervision. No MIM, Q network, or cross-convolution consistency branch.</text>
+
+  <rect class="region" x="55" y="120" width="176" height="445" rx="10"/>
+  <text class="section" x="75" y="151">INPUT</text>
+  <rect class="node" x="78" y="236" width="130" height="94" rx="8"/>
+  <text class="label" x="143" y="270" text-anchor="middle">Received waveform</text>
+  <text class="math" x="143" y="300" text-anchor="middle">r ∈ ℝ⁵⁷⁶¹</text>
+  <rect class="node" x="78" y="390" width="130" height="70" rx="8"/>
+  <text class="label" x="143" y="419" text-anchor="middle">Binary label</text>
+  <text class="math" x="143" y="444" text-anchor="middle">y ∈ {0, 1}</text>
+
+  <rect class="region" x="275" y="120" width="620" height="445" rx="10"/>
+  <text class="section" x="295" y="151">UNSHARED LATENT DECOMPOSITION</text>
+  <rect class="xnode" x="318" y="197" width="220" height="112" rx="8"/>
+  <text class="label" x="428" y="229" text-anchor="middle">X encoder Eₓ</text>
+  <text class="small" x="428" y="255" text-anchor="middle">anti-aliased strided residual blocks</text>
+  <text class="math" x="428" y="281" text-anchor="middle">zₓ ∈ ℝ⁶⁴</text>
+  <rect class="hnode" x="318" y="376" width="220" height="112" rx="8"/>
+  <text class="label" x="428" y="408" text-anchor="middle">H encoder Eₕ</text>
+  <text class="small" x="428" y="434" text-anchor="middle">dilated residual blocks (1, 2, 4, 8)</text>
+  <text class="math" x="428" y="460" text-anchor="middle">zₕ ∈ ℝ⁶⁴</text>
+  <rect class="xnode" x="636" y="197" width="218" height="112" rx="8"/>
+  <text class="label" x="745" y="229" text-anchor="middle">X decoder Dₓ</text>
+  <text class="small" x="745" y="255" text-anchor="middle">multi-scale interpolation + Tukey window</text>
+  <text class="math" x="745" y="281" text-anchor="middle">x̂ ∈ ℝ⁵⁷⁶¹</text>
+  <rect class="hnode" x="636" y="376" width="218" height="112" rx="8"/>
+  <text class="label" x="745" y="408" text-anchor="middle">H decoder Dₕ</text>
+  <text class="small" x="745" y="434" text-anchor="middle">soft threshold; direct path fixed to 1</text>
+  <text class="math" x="745" y="460" text-anchor="middle">ĥ = [1, ĥ₁:₂₈₈₀]</text>
+
+  <rect class="region" x="950" y="120" width="590" height="445" rx="10"/>
+  <text class="section" x="970" y="151">RECONSTRUCTION AND CLASSIFICATION</text>
+  <rect class="op" x="990" y="240" width="175" height="88" rx="8"/>
+  <text class="label" x="1078" y="275" text-anchor="middle">Causal FFT convolution</text>
+  <text class="math" x="1078" y="304" text-anchor="middle">r̂ = x̂ ∗ ĥ</text>
+  <rect class="xnode" x="1245" y="197" width="235" height="112" rx="8"/>
+  <text class="label" x="1363" y="229" text-anchor="middle">Linear classifier C</text>
+  <text class="small" x="1363" y="255" text-anchor="middle">uses click latent only</text>
+  <text class="math" x="1363" y="281" text-anchor="middle">ℓ = C(zₓ), p = σ(ℓ)</text>
+  <rect class="node" x="1245" y="376" width="235" height="76" rx="8"/>
+  <text class="label" x="1363" y="407" text-anchor="middle">Predicted click probability</text>
+  <text class="math" x="1363" y="434" text-anchor="middle">p(y = 1 | r)</text>
+
+  <path class="line" d="M208 283 H280 V253 H318"/>
+  <path class="line" d="M208 283 H265 V432 H318"/>
+  <path class="line" d="M538 253 H636"/>
+  <path class="line" d="M538 432 H636"/>
+  <path class="line" d="M854 253 H990"/>
+  <path class="line" d="M854 432 H925 V314 H990"/>
+  <path class="line" d="M538 253 H1245"/>
+  <path class="line" d="M1363 309 V376"/>
+
+  <rect class="region" x="55" y="620" width="1485" height="255" rx="10"/>
+  <text class="section" x="75" y="651">REFERENCE OBJECTIVE — APPLIED DURING TRAINING ONLY</text>
+  <rect class="loss" x="87" y="700" width="220" height="100" rx="8"/>
+  <text class="label" x="197" y="731" text-anchor="middle">Reconstruction loss</text>
+  <text class="math" x="197" y="761" text-anchor="middle">L<tspan baseline-shift="sub" font-size="13">recon</tspan>(r, r̂)</text>
+  <text class="small" x="197" y="784" text-anchor="middle">relative L2</text>
+  <rect class="loss" x="348" y="700" width="220" height="100" rx="8"/>
+  <text class="label" x="458" y="731" text-anchor="middle">Classification loss</text>
+  <text class="math" x="458" y="761" text-anchor="middle">L<tspan baseline-shift="sub" font-size="13">BCE</tspan>(ℓ, y)</text>
+  <text class="small" x="458" y="784" text-anchor="middle">binary cross-entropy</text>
+  <rect class="loss" x="609" y="700" width="220" height="100" rx="8"/>
+  <text class="label" x="719" y="731" text-anchor="middle">Channel-tail prior</text>
+  <text class="math" x="719" y="761" text-anchor="middle">λ<tspan baseline-shift="sub" font-size="13">H</tspan> L<tspan baseline-shift="sub" font-size="13">H</tspan>(ĥ)</text>
+  <text class="small" x="719" y="784" text-anchor="middle">exponentially weighted tail</text>
+  <rect class="loss" x="870" y="700" width="220" height="100" rx="8"/>
+  <text class="label" x="980" y="731" text-anchor="middle">Click compactness prior</text>
+  <text class="math" x="980" y="761" text-anchor="middle">λ<tspan baseline-shift="sub" font-size="13">C</tspan> L<tspan baseline-shift="sub" font-size="13">compact</tspan>(x̂)</text>
+  <text class="small" x="980" y="784" text-anchor="middle">outside ±1 ms penalty</text>
+  <rect class="loss" x="1131" y="700" width="220" height="100" rx="8"/>
+  <text class="label" x="1241" y="731" text-anchor="middle">Band prior</text>
+  <text class="math" x="1241" y="761" text-anchor="middle">λ<tspan baseline-shift="sub" font-size="13">B</tspan> L<tspan baseline-shift="sub" font-size="13">band</tspan>(x̂)</text>
+  <text class="small" x="1241" y="784" text-anchor="middle">20–190 kHz passband</text>
+  <rect class="total" x="1387" y="694" width="120" height="112" rx="8"/>
+  <text class="white" x="1447" y="735" text-anchor="middle">L<tspan baseline-shift="sub" font-size="13">ref</tspan></text>
+  <text class="white" x="1447" y="765" text-anchor="middle">total loss</text>
+  <text class="small" x="1447" y="790" text-anchor="middle" fill="#FFFFFF">minimize</text>
+  <path class="dash" d="M1078 328 V680 H197 V700"/><path class="dash" d="M1363 452 V680 H458 V700"/>
+  <path class="dash" d="M745 488 V680 H719 V700"/><path class="dash" d="M745 488 V680 H980 V700"/><path class="dash" d="M745 488 V680 H1241 V700"/>
+  <path class="line" d="M307 750 H1387"/><path class="line" d="M568 750 H1387"/><path class="line" d="M829 750 H1387"/><path class="line" d="M1090 750 H1387"/><path class="line" d="M1351 750 H1387"/>
+  <text class="math" x="775" y="850" text-anchor="middle">L<tspan baseline-shift="sub" font-size="13">ref</tspan> = L<tspan baseline-shift="sub" font-size="13">recon</tspan> + L<tspan baseline-shift="sub" font-size="13">BCE</tspan> + 0.38455 L<tspan baseline-shift="sub" font-size="13">H</tspan> + 0.01394 L<tspan baseline-shift="sub" font-size="13">compact</tspan> + 0.01368 L<tspan baseline-shift="sub" font-size="13">band</tspan></text>
+  <text class="small" x="775" y="895" text-anchor="middle">The reference condition has no mutual-information term and no cross-convolution consistency term.</text>
+</svg>

@@ -1,0 +1,9 @@
+numpy
+pandas
+scipy
+soundfile
+scikit-learn
+matplotlib
+tqdm
+torch>=2.4
+

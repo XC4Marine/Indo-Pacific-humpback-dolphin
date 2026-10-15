@@ -1,0 +1,5 @@
+Editable element map
+
+SVG groups: panel-a, input-y, shared-encoder, latent-z, source-decoder, xhat-output, response-decoder, hhat-output, fft-convolution, yhat-output, subtract, residual-output, panel-b, classifier-xhat, classifier-hhat, classifier-residual, source-feature, response-feature, residual-feature, concat, mlp, logit, panel-c, recon-loss, physics-loss, bce-loss, total-loss.
+
+PPTX: all text, waveforms, response taps, neural-network layers, boxes, and connectors are native selectable objects.

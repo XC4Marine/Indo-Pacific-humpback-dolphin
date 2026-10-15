@@ -1,0 +1,16 @@
+Artifact: editable PowerPoint results table.
+Target format: one-slide 16:9 PPTX.
+Core claim: Recon + Physics + BCE has the highest point estimate for all six supplied metrics.
+Reviewer question: how do the three methods compare across discrimination and threshold-dependent metrics?
+Evidence layer: main result.
+Source data: values supplied directly by the user in the current task.
+Statistics / uncertainty: point estimates with 95% confidence intervals; no significance claim inferred from interval overlap.
+Table type: method-by-metric comparison table.
+Table map: methods in rows; AUROC, AUPRC, balanced accuracy, F1, sensitivity, and specificity in columns.
+Exact labels: Waveform Transformer; Recon + BCE; Recon + Physics + BCE; AUROC; AUPRC; Balanced accuracy; F1; 灵敏度; 特异度.
+Reference layout: Codex Grid slide 14, preserving a strong title, short context line, and dominant full-width table.
+Palette: white/black/gray Codex Grid base with one accessible blue accent for the best point-estimate row.
+Output format: PPTX.
+PPTX editability: native PowerPoint table, live text, and native shapes only.
+Traceability: every numeric string is copied verbatim from the user-supplied table.
+

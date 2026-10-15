@@ -390,3 +390,61 @@
 - 预注册对比：历史vs对称+0.104（制作流程捷径）；对称vs严格匹配+0.241（SNR/粗统计不平衡）；严格匹配全波形vs信号区-0.193（背景未提供额外信息、信号形态可分）；BCSC残差vs宽窗口背景AUROC差值不显著；宽窗口背景vs 0.5不显著（无背景类别信息）。
 - BCSC合成直达+0.35 ms副本误差0.0007 ms≤0.03 ms；遮罩合成测试通过（未遮罩不变、边界连续、NCC下降98.74%、随机遮罩不覆盖注入路径）。
 - 原实验文件与 `outputs` 未修改；历史基准只读。
+
+## 2026-08-27：局部能量块稀疏 Physics 单种子五折实验
+
+### 实现与验证
+- 修改 `D:\Project_Github\Indo-Pacific-humpback-dolphin\21_PhysicsInformedClickClassification\pipeline.py`，新增 `Recon + Local-Energy Physics + BCE` 第四条件。局部能量仅约束响应尾部 `h_1...h_1152`，窗口57点、stride 1、无padding，输出1096个窗口；固定 `h_0=1` 不参与损失。
+- CLI新增可选条件列表、`--local-energy-window` 和 `--local-energy-stride`；默认仍为历史三条件。配置哈希纳入Physics类型、窗口和stride，四条件配置哈希为 `4aea26d47206f919`。
+- 三个双分支条件在同折共享初始化种子和DataLoader顺序，Transformer使用独立初始化流；日志同时记录原始Physics与β加权Physics。
+- 新增 `D:\Project_Github\Indo-Pacific-humpback-dolphin\21_PhysicsInformedClickClassification\tests\test_local_energy_physics.py`。4项Local-Energy单元测试、11项既有响应多样性测试、语法编译及7000条完整smoke均通过。
+- smoke验证手工AvgPool一致、零尾部损失为0、连续块/孤立脉冲/稠密尾部损失和梯度有限、`h_0`排除、共享编码器与信道解码器梯度有限；数据哈希与既有低SNR实验一致。
+
+### 完整运行
+- 环境：`D:\Python_env\toothwhale\python.exe`，GPU NVIDIA GeForce RTX 4060；种子20260826，四条件×五折共20模型，总运行约1939.38秒。
+- 输出目录：`D:\Project_Github\Indo-Pacific-humpback-dolphin\21_PhysicsInformedClickClassification\outputs_snr_local_energy_seed_20260826`，未覆盖历史结果。
+- 自动产物验收通过：20个完整权重、20组epoch日志、20组batch日志、20行折级指标、4行种子级指标、28000条唯一预测、24行SNR分层指标、15个双分支局部能量折曲线和汇总图。
+
+### 主要结果
+| 条件 | AUROC | AUPRC | 平衡准确率 | F1 | 灵敏度 | 特异度 |
+|---|---:|---:|---:|---:|---:|---:|
+| Waveform Transformer | 0.84701 | 0.84265 | 0.76786 | 0.76343 | 0.74914 | 0.78657 |
+| Recon + BCE | 0.87051 | 0.88035 | 0.80700 | 0.79797 | 0.76229 | 0.85171 |
+| Recon + Pointwise Physics + BCE | 0.87861 | 0.87862 | 0.80986 | 0.80424 | 0.78114 | 0.83857 |
+| Recon + Local-Energy Physics + BCE | 0.87614 | 0.86708 | 0.81014 | 0.79970 | 0.75800 | 0.86229 |
+
+### 配对Bootstrap与验收结论
+- 2000次录音组配对Bootstrap：Local-Energy−旧Physics AUROC -0.00247，95% CI [-0.00883, 0.00478]；不能声明分类性能改善。
+- Local-Energy−Recon+BCE AUROC +0.00563，95% CI [-0.00487, 0.01651]；证据不明确。
+- Local-Energy−Waveform Transformer AUROC +0.02913，95% CI [0.01161, 0.04994]；在录音来源不确定性范围内显著为正。
+- Local-Energy−旧Physics的局部能量Hoyer差 +0.03034，95% CI [-0.09475, 0.14719]；活动块比例差 +0.03925，95% CI [-0.09437, 0.17828]。不能声明更明显的块状稀疏。
+- Local-Energy原始Physics均值0.0008593，β×Physics均值8.593e-7，占总损失约8.63e-7；当前约束贡献量级偏小。
+- 验收JSON结论：分类容量通过、无退化解、相对Transformer更好；相对旧Physics的分类增益与块稀疏增益均未通过。单种子结果仅量化录音来源不确定性，不能证明跨初始化稳定性。
+
+## 2026-09-01：第22个倒谱–CLUB物理解耦实验初版
+
+### 实现与数据契约
+- 新建独立入口 `D:\Project_Github\Indo-Pacific-humpback-dolphin\22_CepstrumCLUBPhysicsInformedClassification\experiment.py`；未修改第21个实验及其检查点。
+- 只读第21个固定低SNR清单，沿用7000条样本、背景配对、目标SNR和来源隔离折；第22个实验独立生成清单副本、波形缓存、哈希和审计。
+- click与噪声分别统一滤波后，click以零填充平移将绝对峰对齐到索引2880，再按完整5761点RMS重新执行 `[-15,15] dB` 定标。
+- 审计确认原始峰在2880点的clean click为1940/3500，平移1560条；对齐后3500/3500均精确位于2880；最大实际SNR误差为3.553e-15 dB；来源泄漏为0。
+- 第22个数据哈希为 `224ec22c07267873dc7a045fd4a339bfc2164f129d144acc702828ac61506615`，配置哈希为 `222e25d82d8a1b96`。
+
+### 模型、损失与梯度验收
+- 实现共享声学前端及独立 `E_click/E_channel`，均输出64维潜变量和时序特征；click分支产生5761点信源及logit，channel分支产生2881点严格因果 `h=[1,0.25*tanh(tail)]`。
+- 实现8192点功率倒谱，索引0–46严格清零、47–2880逐样本RMS归一化；Channel loss只读取正样本，全负批次返回可微零。
+- 实现相对L2、正样本倒谱L1、BCE和CLUB MIM四项损失，以及先Q后主干的双优化器更新；batch小于2时MIM跳过并返回可微零。
+- 标准库unittest共7项全部通过，包含因果单位冲激卷积、倒谱边界、负样本隔离、Q/主干梯度隔离及CUDA单批次前反向。
+- RTX 4060真实平衡16样本GPU smoke通过；四项损失、总损失、全部输出与梯度均有限。MIM对 `Z_c/Z_h` 的直接梯度范数为1.450e-3/1.392e-3；主干更新时Q参数梯度张量数为0，Q更新时编码器梯度张量数为0。
+- 输出位于 `D:\Project_Github\Indo-Pacific-humpback-dolphin\22_CepstrumCLUBPhysicsInformedClassification\outputs`，含配置、数据契约产物、分项损失、梯度审计、smoke检查点与汇总。未运行quick、完整五折、多种子、基线、消融或统计检验，不形成论文性能结论。
+
+## 2026-09-01：第22个轻量化五种子五折六条件完整消融
+
+- 将主模型压缩为584,699参数，含64维条件高斯Q共609,531参数；共享前端为`16→24→32`三层卷积、stride `4→4→2`，双分支保留`[B,32,181]`时序特征和64维潜变量，解码器使用插值与深度可分离卷积恢复5761点信源和2881点严格因果信道。
+- 锁定并只读复用第22个独立峰对齐缓存，数据哈希为`224ec22c07267873dc7a045fd4a339bfc2164f129d144acc702828ac61506615`；未重建或改写第21个缓存和检查点。
+- 完成种子20260826–20260830、5折、Full/w/o Recon/w/o Channel/w/o MIM/BCE-only/Direct classifier六条件，共150个模型。每折最多25 epoch，验证AUROC早停，保存最佳而非最后检查点；正式运行耗时14847.00秒。
+- 自动验收通过：150个最佳检查点、150个完成标记、150组history、150组batch日志、150行折级指标和210000条唯一有限逐样本预测全部齐全。
+- 五种子汇总AUROC：Full 0.89983、w/o Recon 0.89490、w/o Channel 0.89853、w/o MIM 0.90512、BCE-only 0.89781、Direct classifier 0.89781。
+- 2000次种子—录音来源两级配对Bootstrap中，Full相对w/o Recon、w/o Channel、w/o MIM、BCE-only、Direct classifier的AUROC差分别为+0.00492、+0.00130、-0.00530、+0.00201、+0.00201；所有95% CI均跨0，证据不充分。
+- BCE-only与Direct classifier共享完全相同的有效训练路径、初始化和样本顺序，因而结果完全相同；这两者的差异仅在总参数记账，不能作为独立性能差异证据。
+- 最终产物位于`D:\Project_Github\Indo-Pacific-humpback-dolphin\22_CepstrumCLUBPhysicsInformedClassification\outputs_full_5seeds_6conditions`，中文报告为`research_report_zh.md`，配置哈希为`5620bbfb55f100cb`。

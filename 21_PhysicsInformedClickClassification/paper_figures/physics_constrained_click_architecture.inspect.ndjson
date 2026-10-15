@@ -1,0 +1,149 @@
+{"kind":"slide","id":"sl/ncdr5l","slide":1,"title":"(a) Signal decomposition and causal reconstruction","textShapes":54}
+{"kind":"shape","id":"sh/utcnqx4v","slide":1,"name":"panel-a","bbox":[16,14,1248,402]}
+{"kind":"shape","id":"sh/hg3mlsnm","slide":1,"name":"panel-a-accent","bbox":[16,14,7,402]}
+{"kind":"textbox","id":"sh/wvu5snm1","slide":1,"name":"panel-a-title","text":"(a) Signal decomposition and causal reconstruction","textPreview":"(a) Signal decomposition and causal reconstruction","textChars":50,"textLines":1,"bbox":[38,20,520,29]}
+{"kind":"shape","id":"sh/7q14fi5k","slide":1,"name":"input-y","bbox":[42,176,120,72]}
+{"kind":"shape","id":"sh/mpsnmd4z","slide":1,"name":"input-y-axis","bbox":[48,212,108,0]}
+{"kind":"shape","id":"sh/9sjmhsna","slide":1,"name":"input-y-wave","bbox":[49,182,106,60]}
+{"kind":"textbox","id":"sh/8ra5onm5","slide":1,"name":"input-y-label","text":"Input waveform y","textPreview":"Input waveform y","textChars":16,"textLines":1,"bbox":[34,151,136,22]}
+{"kind":"textbox","id":"sh/zm14by58","slide":1,"name":"input-y-sub","text":"[B, 5761] · 576 kHz","textPreview":"[B, 5761] · 576 kHz","textChars":19,"textLines":1,"bbox":[30,250,144,18]}
+{"kind":"shape","id":"sh/ylsnid4n","slide":1,"name":"shared-encoder-layer-1","bbox":[205,150,25,124]}
+{"kind":"shape","id":"sh/kbelsnih","slide":1,"name":"shared-encoder-layer-2","bbox":[235,159,25,106]}
+{"kind":"shape","id":"sh/lcn2lszm","slide":1,"name":"shared-encoder-layer-3","bbox":[265,168,25,88]}
+{"kind":"shape","id":"sh/ypw3qd0b","slide":1,"name":"shared-encoder-layer-4","bbox":[295,177,25,70]}
+{"kind":"shape","id":"sh/za5kjihw","slide":1,"name":"shared-encoder-layer-5","bbox":[325,185,25,54]}
+{"kind":"textbox","id":"sh/cnelo3i5","slide":1,"name":"shared-encoder-label","text":"Shared 1D convolutional encoder E","textPreview":"Shared 1D convolutional encoder E","textChars":33,"textLines":1,"bbox":[165,119,225,25]}
+{"kind":"textbox","id":"sh/xon2h8zq","slide":1,"name":"shared-encoder-sub","text":"Conv1d · GN · GELU · stride 2","textPreview":"Conv1d · GN · GELU · stride 2","textChars":29,"textLines":1,"bbox":[170,277,215,19]}
+{"kind":"shape","id":"sh/alc3md0z","slide":1,"name":"latent-z","bbox":[382,176,42,72]}
+{"kind":"textbox","id":"sh/bmlkfihk","slide":1,"name":"latent-z-label","text":"z","textPreview":"z","textChars":1,"textLines":1,"bbox":[386,180,34,39.6]}
+{"kind":"textbox","id":"sh/wjyl07yp","slide":1,"name":"latent-z-sub","text":"128 ch","textPreview":"128 ch","textChars":6,"textLines":1,"bbox":[386,214.88,34,27.36]}
+{"kind":"shape","id":"sh/hk7mtczu","slide":1,"name":"source-decoder-layer-1","bbox":[482,105,22,46]}
+{"kind":"shape","id":"sh/5032dcry","slide":1,"name":"source-decoder-layer-2","bbox":[509,98,22,60]}
+{"kind":"shape","id":"sh/4zulk7qt","slide":1,"name":"source-decoder-layer-3","bbox":[536,90,22,76]}
+{"kind":"shape","id":"sh/3ylkb298","slide":1,"name":"source-decoder-layer-4","bbox":[563,82,22,92]}
+{"kind":"shape","id":"sh/ixc3ix8n","slide":1,"name":"source-decoder-layer-5","bbox":[590,74,22,108]}
+{"kind":"textbox","id":"sh/hw329sr2","slide":1,"name":"source-decoder-label","text":"Full-length source decoder Dₓ","textPreview":"Full-length source decoder Dₓ","textChars":29,"textLines":1,"bbox":[442,43,210,25]}
+{"kind":"textbox","id":"sh/gvulgnqh","slide":1,"name":"source-decoder-sub","text":"ConvTranspose1d × 5 · tanh","textPreview":"ConvTranspose1d × 5 · tanh","textChars":26,"textLines":1,"bbox":[447,185,200,19]}
+{"kind":"shape","id":"sh/vulk7i9w","slide":1,"name":"xhat-output","bbox":[652,101,126,72]}
+{"kind":"shape","id":"sh/u9s3exsb","slide":1,"name":"xhat-output-axis","bbox":[658,137,114,0]}
+{"kind":"shape","id":"sh/t8j25sr6","slide":1,"name":"xhat-output-wave","bbox":[659,107,112,60]}
+{"kind":"textbox","id":"sh/87alcnal","slide":1,"name":"xhat-output-label","text":"x̂","textPreview":"x̂","textChars":2,"textLines":1,"bbox":[644,76,142,22]}
+{"kind":"textbox","id":"sh/y1orqpk7","slide":1,"name":"xhat-output-sub","text":"[B, 5761]","textPreview":"[B, 5761]","textChars":9,"textLines":1,"bbox":[640,175,150,18]}
+{"kind":"shape","id":"sh/z2x8zuls","slide":1,"name":"response-decoder-layer-1","bbox":[482,261,25,92]}
+{"kind":"shape","id":"sh/k369sz2x","slide":1,"name":"response-decoder-layer-2","bbox":[512,268,25,78]}
+{"kind":"shape","id":"sh/l4fq143i","slide":1,"name":"response-decoder-layer-3","bbox":[542,275,25,64]}
+{"kind":"shape","id":"sh/axormp4v","slide":1,"name":"response-decoder-layer-4","bbox":[572,283,25,48]}
+{"kind":"textbox","id":"sh/byx8valg","slide":1,"name":"response-decoder-label","text":"Causal response decoder Dₕ","textPreview":"Causal response decoder Dₕ","textChars":26,"textLines":1,"bbox":[442,230,195,25]}
+{"kind":"textbox","id":"sh/cz69of21","slide":1,"name":"response-decoder-sub","text":"Conv1d × 4 · prepend h₀ = 1","textPreview":"Conv1d × 4 · prepend h₀ = 1","textChars":27,"textLines":1,"bbox":[447,356,185,19]}
+{"kind":"shape","id":"sh/x0fqxk3m","slide":1,"name":"hhat-output","bbox":[652,271,126,72]}
+{"kind":"shape","id":"sh/2t4ri54z","slide":1,"name":"hhat-output-axis","bbox":[659,333,112,0]}
+{"kind":"shape","id":"sh/nud8ralk","slide":1,"name":"hhat-output-tap-0","bbox":[668.8,290.88,0,42.12]}
+{"kind":"shape","id":"sh/fmxo36p0","slide":1,"name":"hhat-output-tap-1","bbox":[680.9,310.32,0,22.68]}
+{"kind":"shape","id":"sh/elonu1of","slide":1,"name":"hhat-output-tap-2","bbox":[694.1,300.6,0,32.4]}
+{"kind":"shape","id":"sh/1of6pg76","slide":1,"name":"hhat-output-tap-3","bbox":[707.3,316.8,0,16.2]}
+{"kind":"shape","id":"sh/gn65wb6l","slide":1,"name":"hhat-output-tap-4","bbox":[723.8,307.62,0,25.38]}
+{"kind":"shape","id":"sh/7id4z6p4","slide":1,"name":"hhat-output-tap-5","bbox":[739.2,321.12,0,11.88]}
+{"kind":"shape","id":"sh/6h4nq1oj","slide":1,"name":"hhat-output-tap-6","bbox":[756.8,315.18,0,17.82]}
+{"kind":"textbox","id":"sh/tkfm1g7a","slide":1,"name":"hhat-output-label","text":"ĥ","textPreview":"ĥ","textChars":2,"textLines":1,"bbox":[644,246,142,22]}
+{"kind":"textbox","id":"sh/sj65sb6p","slide":1,"name":"hhat-output-sub","text":"[B, 1153] · 0–2 ms","textPreview":"[B, 1153] · 0–2 ms","textChars":18,"textLines":1,"bbox":[640,345,150,18]}
+{"kind":"shape","id":"sh/jud4vmps","slide":1,"name":"fft-convolution","bbox":[842,174,126,82]}
+{"kind":"textbox","id":"sh/it4nmhon","slide":1,"name":"fft-convolution-label","text":"Causal FFT","textPreview":"Causal FFT","textChars":10,"textLines":1,"bbox":[846,178,118,45.1]}
+{"kind":"textbox","id":"sh/8zilwnm5","slide":1,"name":"fft-convolution-sub","text":"linear convolution","textPreview":"linear convolution","textChars":18,"textLines":1,"bbox":[846,218.28,118,31.16]}
+{"kind":"shape","id":"sh/90b2psnq","slide":1,"name":"yhat-output","bbox":[1004,179,116,72]}
+{"kind":"shape","id":"sh/mx0jux4f","slide":1,"name":"yhat-output-axis","bbox":[1010,215,104,0]}
+{"kind":"shape","id":"sh/ny9kni5k","slide":1,"name":"yhat-output-wave","bbox":[1011,185,102,60]}
+{"kind":"textbox","id":"sh/wn2l07mh","slide":1,"name":"yhat-output-label","text":"Reconstruction ŷ","textPreview":"Reconstruction ŷ","textChars":16,"textLines":1,"bbox":[996,154,132,22]}
+{"kind":"textbox","id":"sh/xob2tcn2","slide":1,"name":"yhat-output-sub","text":"first 5761 samples","textPreview":"first 5761 samples","textChars":18,"textLines":1,"bbox":[992,253,140,18]}
+{"kind":"shape","id":"sh/a1k3yx4b","slide":1,"name":"subtract","bbox":[1138,193,44,44]}
+{"kind":"textbox","id":"sh/v2tkr25w","slide":1,"name":"subtract-label","text":"−","textPreview":"−","textChars":1,"textLines":1,"bbox":[1140,197,40,34]}
+{"kind":"shape","id":"sh/cry1o3mx","slide":1,"name":"residual-output","bbox":[1168,304,80,55]}
+{"kind":"shape","id":"sh/dsr2h8ni","slide":1,"name":"residual-output-axis","bbox":[1174,331.5,68,0]}
+{"kind":"shape","id":"sh/dojil4fm","slide":1,"name":"residual-output-wave","bbox":[1175,310,66,43]}
+{"kind":"textbox","id":"sh/snqhszy1","slide":1,"name":"residual-output-label","text":"Residual r","textPreview":"Residual r","textChars":10,"textLines":1,"bbox":[1160,279,96,22]}
+{"kind":"textbox","id":"sh/rmh0juxg","slide":1,"name":"residual-output-sub","text":"y − ŷ","textPreview":"y − ŷ","textChars":5,"textLines":1,"bbox":[1156,361,104,18]}
+{"kind":"shape","id":"sh/ql8zqpgv","slide":1,"bbox":[162,212,43,0]}
+{"kind":"shape","id":"sh/1sjip4fi","slide":1,"bbox":[350,212,32,0]}
+{"kind":"shape","id":"sh/0ra1wjyx","slide":1,"bbox":[424,128,58,84]}
+{"kind":"shape","id":"sh/fq10nexc","slide":1,"bbox":[424,212,58,95]}
+{"kind":"shape","id":"sh/epszu9gr","slide":1,"bbox":[612,128,40,9]}
+{"kind":"shape","id":"sh/pg3itofe","slide":1,"bbox":[597,307,55,0]}
+{"kind":"shape","id":"sh/ova10jy9","slide":1,"bbox":[778,137,64,78]}
+{"kind":"shape","id":"sh/mpknyhsf","slide":1,"bbox":[778,215,64,92]}
+{"kind":"shape","id":"sh/nqto7m90","slide":1,"bbox":[968,215,36,0]}
+{"kind":"shape","id":"sh/8r250ral","slide":1,"bbox":[1120,215,18,0]}
+{"kind":"shape","id":"sh/9sv69wrq","slide":1,"bbox":[1160,237,8,94.5]}
+{"kind":"shape","id":"sh/at4721sb","slide":1,"name":"input-y-bypass-anchor","bbox":[1158,61,4,4]}
+{"kind":"shape","id":"sh/vudob69w","slide":1,"bbox":[102,63,1056,113]}
+{"kind":"shape","id":"sh/wfmp4bah","slide":1,"bbox":[1160,65,0,128]}
+{"kind":"textbox","id":"sh/xgv6dwr2","slide":1,"name":"identity-path-label","text":"identity path y","textPreview":"identity path y","textChars":15,"textLines":1,"bbox":[94,49,150,18]}
+{"kind":"shape","id":"sh/ih4761sn","slide":1,"name":"panel-b","bbox":[16,430,1248,168]}
+{"kind":"textbox","id":"sh/jidof698","slide":1,"name":"panel-b-title","text":"(b) Classification from decoded representations","textPreview":"(b) Classification from decoded representations","textChars":47,"textLines":1,"bbox":[38,436,560,29]}
+{"kind":"shape","id":"sh/3atkbid8","slide":1,"name":"classifier-xhat","bbox":[64,470,96,30]}
+{"kind":"shape","id":"sh/29k32dw3","slide":1,"name":"classifier-xhat-axis","bbox":[70,485,84,0]}
+{"kind":"shape","id":"sh/pcb2d8ve","slide":1,"name":"classifier-xhat-wave","bbox":[71,476,82,18]}
+{"kind":"shape","id":"sh/4b2l4net","slide":1,"name":"classifier-xhat-label","bbox":[56,445,112,22]}
+{"kind":"shape","id":"sh/redkfidk","slide":1,"name":"classifier-hhat","bbox":[64,516,96,30]}
+{"kind":"shape","id":"sh/qd436dcz","slide":1,"name":"classifier-hhat-axis","bbox":[71,536,82,0]}
+{"kind":"shape","id":"sh/dgv2hsvq","slide":1,"name":"classifier-hhat-tap-0","bbox":[78.4,526.64,0,9.36]}
+{"kind":"shape","id":"sh/cfml8nu5","slide":1,"name":"classifier-hhat-tap-1","bbox":[87.2,530.96,0,5.04]}
+{"kind":"shape","id":"sh/z2dkj2dg","slide":1,"name":"classifier-hhat-tap-2","bbox":[96.8,528.8,0,7.2]}
+{"kind":"shape","id":"sh/eh43axcv","slide":1,"name":"classifier-hhat-tap-3","bbox":[106.4,532.4,0,3.6]}
+{"kind":"shape","id":"sh/w76107a9","slide":1,"name":"classifier-hhat-tap-4","bbox":[118.4,530.36,0,5.64]}
+{"kind":"shape","id":"sh/x8f2tcbu","slide":1,"name":"classifier-hhat-tap-5","bbox":[129.6,533.36,0,2.64]}
+{"kind":"shape","id":"sh/a5ojyxs3","slide":1,"name":"classifier-hhat-tap-6","bbox":[142.4,532.04,0,3.96]}
+{"kind":"shape","id":"sh/b6xkr2to","slide":1,"name":"classifier-hhat-label","bbox":[56,491,112,22]}
+{"kind":"shape","id":"sh/ojm1wnad","slide":1,"name":"classifier-residual","bbox":[64,562,96,26]}
+{"kind":"shape","id":"sh/94f2psbi","slide":1,"name":"classifier-residual-axis","bbox":[70,575,84,0]}
+{"kind":"shape","id":"sh/mh4juds7","slide":1,"name":"classifier-residual-wave","bbox":[71,568,82,14]}
+{"kind":"shape","id":"sh/nidknits","slide":1,"name":"classifier-residual-label","bbox":[56,537,112,22]}
+{"kind":"textbox","id":"sh/0fm1sna1","slide":1,"name":"classifier-xhat-symbol","text":"x̂","textPreview":"x̂","textChars":2,"textLines":1,"bbox":[31,472,28,26]}
+{"kind":"textbox","id":"sh/1gvilsbm","slide":1,"name":"classifier-hhat-symbol","text":"ĥ","textPreview":"ĥ","textChars":2,"textLines":1,"bbox":[31,518,28,26]}
+{"kind":"textbox","id":"sh/mx4vetgz","slide":1,"name":"classifier-residual-symbol","text":"r","textPreview":"r","textChars":1,"textLines":1,"bbox":[31,562,28,26]}
+{"kind":"shape","id":"sh/nyxwnyx4","slide":1,"name":"source-feature","bbox":[208,468,176,38]}
+{"kind":"textbox","id":"sh/8z6dg3yp","slide":1,"name":"source-feature-label","text":"Source feature encoder","textPreview":"Source feature encoder","textChars":22,"textLines":1,"bbox":[212,472,168,20.9]}
+{"kind":"textbox","id":"sh/9kfep8fa","slide":1,"name":"source-feature-sub","text":"32-D","textPreview":"32-D","textChars":4,"textLines":1,"bbox":[212,488.52,168,14.44]}
+{"kind":"shape","id":"sh/yt4vatgn","slide":1,"name":"response-feature","bbox":[208,514,176,38]}
+{"kind":"textbox","id":"sh/zudwjyx8","slide":1,"name":"response-feature-label","text":"Response feature encoder","textPreview":"Response feature encoder","textChars":24,"textLines":1,"bbox":[212,518,168,20.9]}
+{"kind":"textbox","id":"sh/0vmdc3yt","slide":1,"name":"response-feature-sub","text":"32-D","textPreview":"32-D","textChars":4,"textLines":1,"bbox":[212,534.52,168,14.44]}
+{"kind":"shape","id":"sh/lwvelofe","slide":1,"name":"residual-feature","bbox":[208,560,176,38]}
+{"kind":"textbox","id":"sh/ipovmdgr","slide":1,"name":"residual-feature-label","text":"Residual feature encoder","textPreview":"Residual feature encoder","textChars":24,"textLines":1,"bbox":[212,564,168,20.9]}
+{"kind":"textbox","id":"sh/jqhwvixc","slide":1,"name":"residual-feature-sub","text":"32-D","textPreview":"32-D","textChars":4,"textLines":1,"bbox":[212,580.52,168,14.44]}
+{"kind":"shape","id":"sh/tkjylczu","slide":1,"name":"concat","bbox":[465,493,128,72]}
+{"kind":"textbox","id":"sh/sjahsri9","slide":1,"name":"concat-label","text":"Concatenate","textPreview":"Concatenate","textChars":11,"textLines":1,"bbox":[469,497,120,39.6]}
+{"kind":"textbox","id":"sh/ri1gjmho","slide":1,"name":"concat-sub","text":"96-D","textPreview":"96-D","textChars":4,"textLines":1,"bbox":[469,531.88,120,27.36]}
+{"kind":"shape","id":"sh/6h8zqh03","slide":1,"name":"mlp","bbox":[666,493,126,72]}
+{"kind":"textbox","id":"sh/5gzyhczi","slide":1,"name":"mlp-label","text":"MLP","textPreview":"MLP","textChars":3,"textLines":1,"bbox":[670,497,118,39.6]}
+{"kind":"textbox","id":"sh/4fqxo7ix","slide":1,"name":"mlp-sub","text":"96 → 64 → 1","textPreview":"96 → 64 → 1","textChars":11,"textLines":1,"bbox":[670,531.88,118,27.36]}
+{"kind":"shape","id":"sh/jehgf2hc","slide":1,"name":"logit","bbox":[875,504,126,50]}
+{"kind":"textbox","id":"sh/it8fmx07","slide":1,"name":"logit-label","text":"Logit s","textPreview":"Logit s","textChars":7,"textLines":1,"bbox":[879,508,118,27.5]}
+{"kind":"textbox","id":"sh/pc3ytwz2","slide":1,"name":"logit-sub","text":"no sigmoid","textPreview":"no sigmoid","textChars":10,"textLines":1,"bbox":[879,531,118,19]}
+{"kind":"shape","id":"sh/obuhkbih","slide":1,"bbox":[160,485,48,2]}
+{"kind":"shape","id":"sh/87m9czap","slide":1,"bbox":[160,531,48,2]}
+{"kind":"shape","id":"sh/9sva54ba","slide":1,"bbox":[160,575,48,4]}
+{"kind":"shape","id":"sh/m5kra9cj","slide":1,"bbox":[384,487,81,42]}
+{"kind":"shape","id":"sh/n6ds3ut4","slide":1,"bbox":[384,529,81,4]}
+{"kind":"shape","id":"sh/03298zut","slide":1,"bbox":[384,529,81,50]}
+{"kind":"shape","id":"sh/l4ba14by","slide":1,"bbox":[593,529,73,0]}
+{"kind":"shape","id":"sh/y1kr6pcn","slide":1,"bbox":[792,529,83,0]}
+{"kind":"textbox","id":"sh/z2tszut8","slide":1,"name":"gradient-note","text":"BCE gradients must pass\nthrough both decoders\n(no encoder shortcut)","textPreview":"BCE gradients must pass | through both decoders | (no encoder shortcut)","textChars":67,"textLines":3,"bbox":[1050,484,174,82]}
+{"kind":"shape","id":"sh/cz294fuh","slide":1,"name":"panel-c","bbox":[16,610,1248,96]}
+{"kind":"textbox","id":"sh/d0baxkb2","slide":1,"name":"panel-c-title","text":"(c) Joint training objective","textPreview":"(c) Joint training objective","textChars":28,"textLines":1,"bbox":[38,616,260,27]}
+{"kind":"shape","id":"sh/fu9snad4","slide":1,"name":"recon-loss","bbox":[232,632,164,48]}
+{"kind":"textbox","id":"sh/e90be5wj","slide":1,"name":"recon-loss-label","text":"Reconstruction loss","textPreview":"Reconstruction loss","textChars":19,"textLines":1,"bbox":[236,636,156,26.4]}
+{"kind":"textbox","id":"sh/1wrapkvu","slide":1,"name":"recon-loss-sub","text":"y, ŷ","textPreview":"y, ŷ","textChars":4,"textLines":1,"bbox":[236,657.92,156,18.24]}
+{"kind":"shape","id":"sh/gvitgfe9","slide":1,"name":"physics-loss","bbox":[444,632,150,48]}
+{"kind":"textbox","id":"sh/3y9srud0","slide":1,"name":"physics-loss-label","text":"Physics loss","textPreview":"Physics loss","textChars":12,"textLines":1,"bbox":[448,636,142,26.4]}
+{"kind":"textbox","id":"sh/2x0bipwf","slide":1,"name":"physics-loss-sub","text":"ĥ tail prior","textPreview":"ĥ tail prior","textChars":13,"textLines":1,"bbox":[448,657.92,142,18.24]}
+{"kind":"shape","id":"sh/p0bat4v6","slide":1,"name":"bce-loss","bbox":[642,632,134,48]}
+{"kind":"textbox","id":"sh/oz2tkzel","slide":1,"name":"bce-loss-label","text":"BCE loss","textPreview":"BCE loss","textChars":8,"textLines":1,"bbox":[646,636,126,26.4]}
+{"kind":"textbox","id":"sh/b2tsvudw","slide":1,"name":"bce-loss-sub","text":"s, c","textPreview":"s, c","textChars":4,"textLines":1,"bbox":[646,657.92,126,18.24]}
+{"kind":"shape","id":"sh/q1kbmpwr","slide":1,"name":"total-loss","bbox":[852,626,370,60]}
+{"kind":"textbox","id":"sh/a5svid4n","slide":1,"name":"total-loss-label","text":"Total loss","textPreview":"Total loss","textChars":10,"textLines":1,"bbox":[856,630,362,33]}
+{"kind":"textbox","id":"sh/b61cril8","slide":1,"name":"total-loss-sub","text":"L = L_Recon + βL_Physics + λL_BCE","textPreview":"L = L_Recon + βL_Physics + λL_BCE","textChars":33,"textLines":1,"bbox":[856,658.4,362,22.8]}
+{"kind":"textbox","id":"sh/w7adk3mt","slide":1,"name":"loss-plus-1","text":"+","textPreview":"+","textChars":1,"textLines":1,"bbox":[402,640,36,32]}
+{"kind":"textbox","id":"sh/x8jut83e","slide":1,"name":"loss-plus-2","text":"+","textPreview":"+","textChars":1,"textLines":1,"bbox":[600,640,36,32]}
+{"kind":"textbox","id":"sh/i9svmd4z","slide":1,"name":"loss-arrow","text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[796,640,40,32]}
+{"kind":"textbox","id":"sh/ja1cvilk","slide":1,"name":"legend-solid","text":"tensor/data flow","textPreview":"tensor/data flow","textChars":16,"textLines":1,"bbox":[74,647,132,18]}
+{"kind":"textbox","id":"sh/kbudonmp","slide":1,"name":"legend-dashed","text":"training-only supervision","textPreview":"training-only supervision","textChars":25,"textLines":1,"bbox":[74,670,150,18]}
+{"kind":"shape","id":"sh/5c3exs3a","slide":1,"name":"legend-solid-line","bbox":[38,656,28,0]}
+{"kind":"shape","id":"sh/ed8vat4f","slide":1,"name":"legend-dashed-line","bbox":[38,679,28,0]}

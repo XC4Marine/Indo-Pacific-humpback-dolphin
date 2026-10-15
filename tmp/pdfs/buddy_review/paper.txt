@@ -1,0 +1,357 @@
+                                                    BUDDY: SINGLE-CHANNEL BLIND UNSUPERVISED DEREVERBERATION WITH
+                                                                           DIFFUSION MODELS
+
+                                               Eloi Moliner1∗            Jean-Marie Lemercier2∗              Simon Welker2          Timo Gerkmann2               Vesa Välimäki1
+                                                1
+                                                    Acoustics Lab, Dept. Information and Communications Eng., Aalto University, Espoo, Finland
+                                                                     2
+                                                                       Signal Processing (SP), Universität Hamburg, Germany
+
+
+                                                                       ABSTRACT                                     spectro-temporal mapping [11]. Generative models represent an-
+                                                                                                                    other category of dereverberation algorithms aiming to learn the dis-
+                                          In this paper, we present an unsupervised single-channel method for       tribution of anechoic speech conditioned on reverberant input. Some
+                                          joint blind dereverberation and room impulse response estimation,         blind supervised methods using generative models such as diffusion
+arXiv:2405.04272v1 [eess.AS] 7 May 2024
+
+
+
+
+                                          based on posterior sampling with diffusion models. We parameter-          models [12, 13] have been recently proposed [14, 15]. However, su-
+                                          ize the reverberation operator using a filter with exponential decay      pervised approaches struggle with limited generalization to diverse
+                                          for each frequency subband, and iteratively estimate the correspond-      acoustic conditions due to the scarcity and variability of available
+                                          ing parameters as the speech utterance gets refined along the reverse     RIR data. Unsupervised approaches offer the potential to circumvent
+                                          diffusion trajectory. A measurement consistency criterion enforces        such limitations as they do not require paired anechoic/reverberant
+                                          the fidelity of the generated speech with the reverberant measure-        data. This paper builds upon prior work [16], which proposed an
+                                          ment, while an unconditional diffusion model implements a strong          unsupervised method for informed single-channel dereverberation
+                                          prior for clean speech generation. Without any knowledge of the           based on diffusion posterior sampling. The previous study showed
+                                          room impulse response nor any coupled reverberant-anechoic data,          the potential of leveraging diffusion models as a strong clean speech
+                                          we can successfully perform dereverberation in various acoustic sce-      prior, which, when combined with a criterion to match the measure-
+                                          narios. Our method significantly outperforms previous blind unsu-         ment, reached state-of-the-art dereverberation in an informed sce-
+                                          pervised baselines, and we demonstrate its increased robustness to        nario [16]. This paper extends the method to blind dereverberation,
+                                          unseen acoustic conditions in comparison to blind supervised meth-        where the unknown RIR is estimated along the anechoic speech. We
+                                          ods. Audio samples and code are available online1 .                       parameterize the RIR with a model-based subband filter, where each
+                                              Index Terms— Acoustics, deep learning, speech enhancement             subband of the reverberation filter is modeled by an exponentially
+                                                                                                                    decaying signal. The resulting algorithm is an optimization scheme
+                                                                                                                    alternating between the diffusion process generating the anechoic
+                                                                  1. INTRODUCTION
+                                                                                                                    speech, and the parameter search estimating the acoustic conditions.
+                                          When acoustic waves propagate in enclosures and get reflected by               Previous works in related domains explore various parameter
+                                          walls, the sound received is perceived as reverberated, which can         estimation techniques for solving blind inverse problems with dif-
+                                          significantly degrade speech intelligibility and quality [1]. The goal    fusion posterior sampling. For image deblurring, [17] propose to
+                                          of dereverberation is to recover the anechoic component from rever-       use a parallel diffusion process to estimate the deblurring kernel,
+                                          berant speech. We focus here on the single-channel scenario, where        while [18] adopts an expectation-maximization approach. In the au-
+                                          measurements from only one microphone are available, which is sig-        dio domain, [19] address the problem of blind bandwidth extension
+                                          nificantly more challenging than multi-channel scenarios [2].             by iteratively refining the parameters of the lowpass filter degrada-
+                                                                                                                    tion. Closely related is the work by Saito et al. [20], which per-
+                                               Traditional dereverberation algorithms assume some statistical
+                                                                                                                    form unsupervised blind dereverberation using DDRM [21] and the
+                                          properties, such as Gaussianity or sparsity, about the anechoic and
+                                                                                                                    weighted-prediction error (WPE) algorithm as initialization [6].
+                                          reverberant signals. These properties are leveraged to perform dere-
+                                          verberation in the time, spectral or cepstral domain [3]. These meth-          We name our method BUDDy for Blind Unsupervised Derever-
+                                          ods can tackle informed scenarios, where the room impulse response        beration with Diffusion Models. We show experimentally that
+                                          (RIR) is known [4, 5] as well as blind scenarios where the RIR is         BUDDy efficiently removes reverberation from speech utterances
+                                          unknown [6, 7]. Informed dereverberation is easier than blind dere-       in many acoustic scenarios, thereby largely outperforming previous
+                                          verberation, but most scenarios in real-life applications are blind, as   blind unsupervised techniques. As supervision is not required dur-
+                                          the RIR is either not measured beforehand, or becomes invalid even        ing the training phase, we demonstrate that BUDDy does not lose
+                                          with the slightest deviations in receiver or emitter positions.           performance when presented with unseen acoustic conditions, as
+                                                                                                                    opposed to existing blind supervised dereverberation approaches.
+                                               Data-driven approaches rely less on such assumptions but rather
+                                          learn the signal properties and structures from data [8]. Most
+                                          of these methods are based on supervised learning using pairs                                     2. BACKGROUND
+                                          of anechoic and reverberant speech. Supervised predictive mod-
+                                          els have been widely used for blind dereverberation, including            2.1. Diffusion-Based Generative Models
+                                          time-frequency (T-F) maskers [9], time-domain methods [10] and
+                                                                                                                    Diffusion-based generative models, or simply diffusion models [12,
+                                             ∗ These authors contributed equally to this work.                      22], emerged as a class of generative models that learn complex data
+                                              1 uhh.de/sp-inf-buddy.                                                distributions via iterative denoising. At training time, the target data
+distribution is transformed into a tractable Gaussian distribution by a     heavy-tailedness of speech distributions [26]. With this series of ap-
+forward process, incrementally adding noise. During the inference,          proximations, we obtain the following likelihood score:
+the reverse process refines an initial noise sample into a data sam-
+ple, by progressively removing noise. The reverse diffusion process,                  ∇xτ log p(y|xτ , h) ≈ −ζ(τ )∇xτ C(y, h ∗ x̂0 ),         (5)
+which transports noise samples from a Gaussian prior to the data dis-
+                                                                            where the function C(·, ·) is defined as:
+tribution pdata , can be characterized by the following probability flow
+ordinary differential equation (ODE):                                                            M    K
+                                                                                             1 XX
+                                                                                C(y, ŷ) =         ∥Scomp (y)m,k − Scomp (ŷ)m,k ∥22 .        (6)
+           dxτ = [f (xτ , τ ) − 21 g(τ )2 ∇xτ log p(xτ )]dτ,         (1)                     M m=1
+                                                                                                     k=1
+
+where τ indexes the diffusion steps flowing in reverse from Tmax            The weighting parameter ζ(τ ) controls the trade-off between ad-
+to 0. The current diffusion state xτ starts from the initial condi-         herence to the prior data distribution and fidelity to the observed
+tion xTmax ∼ N (0, σ(Tmax )2 I) and ends at x0 ∼ pdata . We adopt           data. According to our Gaussian assumption (4), its theoretical value
+the variance exploding parameterization of Karras et al. [23], where        should depend on the unknown variance η as ζ(τ ) = 1/2η 2 . In
+√ drift and diffusion are defined as f (xτ , τ ) = 0 and g(τ ) =
+the                                                                         practice, we resort to the same parameterization as in [19, 27].
+   2τ , respectively. Similarly, we adopt σ(τ ) = τ as the noise vari-
+ance schedule, which defines the so-called transition kernel i.e. the
+marginal densities: pτ (xτ |x0 ) = N (xτ ; x0 , σ(τ )2 I). The score        3.2. Reverberation Operator
+function ∇xτ log p(xτ ) is intractable at inference time as we do not       The employed reverberation operator relies on a subband filtering
+have access to x0 . In practice, a score model parameterized with a         approximation [28], which is applied within the Short-Time Fourier
+deep neural network sθ (xτ , τ ) is trained to estimate the score func-     Transform (STFT) domain. Let H := STFT(h) ∈ CNh ×K repre-
+tion using a denoising score matching objective [24].                       sent the STFT of an RIR h with Nh time frames and K frequency
+                                                                            bins. Similarly, let X ∈ CM ×K , and Y ∈ CM +Nh −1×K , de-
+2.2. Diffusion Posterior Sampling for Dereverberation                       note the STFTs of anechoic x0 and reverberant y speech signals,
+                                                                            repectively. The subband convolution operation applies independent
+Single-channel dereverberation can be considered as the inverse             convolutions along the time dimension of each frequency band:
+problem of retrieving the anechoic utterance x0 ∈ RL from the
+reverberant measurement y ∈ RL , which is often modelled by con-                                           Nh
+volving the anechoic speech with an RIR h ∈ RLh , expressed as
+                                                                                                           X
+                                                                                                Ym,k =           Hn,k Xm−n,k .                (7)
+y = h ∗ x0 . We aim to solve this inverse problem by sampling from                                         n=0
+the posterior distribution p(x0 |y, h) of anechoic speech given the
+measurement and the RIR. We adopt diffusion models for this pos-                 In the blind scenario, we need to estimate H, which is an ardu-
+terior sampling task by replacing the score function ∇xτ log p(xτ )         ous task without knowledge of the anechoic speech. We constrain
+in (1) by the posterior score ∇xτ log p(xτ |y, h) [13]. Applying            the space of possible solutions by designing a structured, differen-
+Bayes’ rule, the posterior score is obtained as                             tiable RIR prior whose parameters ψ can be estimated through gradi-
+                                                                            ent descent. We denote the complete forward reverberation operator,
+ ∇xτ log p(xτ |y, h) = ∇xτ log p(xτ ) + ∇xτ log p(y|xτ , h), (2)            including forward and inverse STFT, as Aψ (·) : RL → RL .
+                                                                                 We denote as A ∈ RNh ×K and Φ ∈ RNh ×K the RIR mag-
+where the first term, or prior score, can be approximated with a            nitudes and phases of H, respectively. We parameterize the magni-
+trained score model sθ (xτ , τ ) ≈ ∇xτ log p(xτ ). The likelihood           tude matrix A as a multi-band exponential decay model defined in
+p(y|xτ , h) is generally intractable because we lack a signal model         B < K frequency bands. Let A′ ∈ RNh ×B be the subsampled ver-
+for y given the diffusion state xτ . We will introduce in the next sec-     sion of A in the B selected frequency bands. Each frequency band b
+tion a series of approximations to make its computation tractable.          is characterized by its weight wb and exponential decay rate αb , such
+                                                                            that the corresponding subband magnitude filter can be expressed as:
+                           3. METHODS
+                                                                                                     A′n,b = wb e−αb n .                      (8)
+3.1. Likelihood Score Approximation
+                                                                            Once the weights and decay rates parameters are estimated, we re-
+In order to obtain a tractable likelihood computation, we posit as          construct the magnitudes A by interpolating the subsampled A′ us-
+in [25] that a one-step denoising estimate of x0 at time τ can serve        ing A = exp(lerp(log(A′ ))), where lerp represents linear interpo-
+as a sufficient statistic for xτ in this context, i.e. that p(y|xτ , h) ≈   lation of the frequencies.
+p(y|x̂0 , h). Such estimate x̂0 can be obtained using the score model:           Given the lack of structure of RIR phases, we perform indepen-
+                                                                            dent optimization for each phase factor in Φ. The resulting set of
+                 ∆
+             x̂0 = x̂0 (xτ , τ ) = xτ − σ(τ )2 sθ (xτ , τ ).         (3)    parameters to optimize is therefore ψ = {Φ, (wb , αb )b=1,...,B }.
+                                                                                 After each optimization step, the estimated time-frequency RIR
+Furthermore, we consider here that the convolution model re-                H is further processed through a projection step:
+mains valid when using this denoised estimate, and therefore that
+p(y|x̂0 , h) ≈ p(y|x̂0 ∗h). Finally, we model the estimation error as                        H = STFT(δ ⊕ Pmin (iSTFT(H))).                   (9)
+following a Gaussian distribution in the compressed STFT domain.
+                                                                            This operation primarily ensures STFT consistency [29] of H. We
+         p(y|x̂0 ∗ h) = N (Scomp (y); Scomp (x̂0 ∗ h), η 2 I),       (4)    additionally include a projection Pmin that ensures the time domain
+                                                                            RIR has minimum phase lag to guarantee a stable inverse filter, us-
+where Scomp (y) = |STFT(y)|2/3 exp{j∠STFT(y)} is the com-                   ing the Hilbert transform method [30]. Finally, to make the direct-
+pressed spectrogram. We apply this compression to account for the           to-reverberation ratio only depend on the late reverberation and to
+                                            Posterior                          Algorithm 1 Inference algorithm
+  xN         xn                                             xn−1     x0
+                                          Sampling Step                        Require: reverberant speech y
+                       Score Model
+                                                                                 xinit ← WPE(y)
+                                                                                                                2
+                                                                                 Sample xN ∼ N (xinit , σN        I)               ▷ Warm initialization
+                        sθ (xn , σn )                                            Initialize ψN                          ▷ Initialize the RIR parameters
+                                                                                 for n ← N, . . . , 1 do                     ▷ Discrete step backwards
+                                        LH Score Approx.
+                            x̂0
+                                    −ζ(τn )∇xn C(y, Aψn (x̂0 ))
+                                                                                     sn ← sθ (xn , τn )                         ▷ Evaluate score model
+                                                                                     x̂0 ← xn − σn2 sn               ▷ Get one-step denoising estimate
+                           RIR                                                       x̂0 ← Rescale(x̂0 )
+  ψN         ψn                                             ψn−1     ψ0                0
+                       Optimization                                                  ψn−1   ← ψn               ▷ Use the RIR parameters from last step
+                                        ×Nits.                                       for j ← 0, . . . , Nits. do                     ▷ RIR optimization
+                                                                                                 j                                       j
+Fig. 1: Blind unsupervised dereverberation alternating between RIR                        JRIR (ψn−1  ) ← C(y, Aψj (x̂0 )) + R(ψn−1          )
+                                                                                                                    n−1
+                                                                                          j+1    j                 j
+estimation and posterior sampling for speech reconstruction.                             ψn−1 ← ψn−1 − Adam(JRIR (ψn−1 ))    ▷ Optim. step
+                                                                                          j+1            j+1
+                                                                                         ψn−1 ← project(ψn−1 )            ▷ Projection step
+enforce further constraints on ψ for a more stable optimization, we                           M
+take the direct path to be at the first sample and with amplitude one.               ψn−1 ← ψn−1
+This is achieved by replacing the first sample of the time-domain                    gn ← ζ(τn )∇xn C(y, Aψn−1 (x̂0 ))     ▷ LH score approx.
+RIR with a unit impulse, as indicated by the operation δ ⊕ (·).                      xn−1 ← xn − σn (σn−1 − σn )(sn + gn )      ▷ Update step
+                                                                                 return x0                        ▷ Reconstructed audio signal
+3.3. Blind Dereverberation Inference
+The inference process solves the following objective:
+                                                                               from various public datasets (please visit our code repository for de-
+ x̂0 , ψ̂ = arg min C(y, Aψ (x0 )) + R(ψ),            s.t. x0 ∼ pdata . (10)   tails). In total we obtain approximately 10,000 RIRs, and split them
+             x0 ,ψ                                                             between training, validation, and testing using ratios 0.9, 0.05, and
+                                                                               0.05, respectively. The training and validation sets are only used to
+This objective seeks to find the optimal speech x̂0 and RIR param-
+                                                                               train the baselines which require coupled reverberant/anechoic data.
+eters ψ̂ that minimize the reconstruction error C(y, Aψ (x0 )) while           All data is resampled at 16 kHz.
+also incorporating a regularization term R(ψ). An essential aspect
+is the constraint x0 ∼ pdata , which ensures that the estimated sig-
+nal x̂0 adheres to the distribution pdata of anechoic speech samples.          4.2. Baselines
+This constraint is implemented in a soft manner by leveraging a pre-
+                                                                               We compare our method BUDDy to several blind supervised base-
+trained score model sθ (xτ , τ ) trained on anechoic speech.
+                                                                               lines such as NCSN++M [31] and diffusion-based SGMSE+ [14]
+     The inference algorithm is outlined in Algorithm 1 and visu-
+                                                                               and StoRM [15]. We also include blind unsupervised approaches
+alized in Fig. 1, using the discretization further described in Eq.
+                                                                               leveraging traditional methods such as WPE [6] and Yohena et al.
+(12). The algorithm employs the likelihood score approximation
+                                                                               [7], as well as diffusion models Saito et al. [20] and GibbsDDRM
+from Sec. 3.1, but replacing the convolution with the the reverbera-
+                                                                               [33] with code provided by the authors. For WPE, we take 5 iter-
+tion operator Aψ (·), while its parameters ψ are optimized in parallel
+                                                                               ations, a filter length of 50 STFT frames (400 ms) and a delay of 2
+with the speech signal through gradient descent.
+                                                                               STFT frames (16 ms).
+     We introduce in (10) a noise regularization term R(ψ):
+                  Nh    K
+              1 XX                                                             4.3. Hyperparameters and Training Configuration
+  R(ψ) =                  ∥Scomp (ĥψ )l,k − Scomp (ĥψ′ + σ ′ v)l,k ∥22 ,
+             Nh                                                                Data representation:     We train the score model sθ using only
+                  l=1 k=1
+                                                                      (11)     the anechoic data from VCTK. For training, 4-s segments are ran-
+where ĥψ = Aψ (δ) represents the estimated RIR in the waveform                domly extracted from the utterances. Using publicly available code,
+domain, v ∼ N (0, I) is a vector of white Gaussian noise, and ĥψ′             the blind supervised models NCSN++M [31], SGMSE+ [14] and
+is a copy of the current estimate of ĥψ , such that the arg min in (10)       StoRM [15] are trained using coupled reverberant/anechoic speech,
+does not apply to it. In code, this is analogous to detaching the gradi-       where the reverberant speech is obtained by convolving the anechoic
+ents of ĥψ using a stop grad operator. We adopt an annealed sched-            speech from VCTK with the normalized RIRs.
+ule for the noise level σ ′ (τ ), resembling the score model schedule          Reverberation operator: For all methods, STFTs are computed us-
+σ(τ ) but with different hyper-parameters. This regularization term            ing a Hann window of 32 ms and a hop size of 8 ms. For subband
+injects noise in the RIR parameter gradients, with decreasing noise            filtering, we further employ 50% zero-padding to avoid aliasing ar-
+power, which enables a wider and smoother exploration while allow-             tifacts. Given our sampling rate of fs = 16 kHz, this results in
+ing for convergence toward the end of the optimization.                        K = 513 frequency bins. We set the number of STFT frames of
+                                                                               our operator to Nh = 100 (800 ms). We subsample the frequency
+                                                                               scale in B = 26 bands, with a 125-Hz spacing between 0 and 1 kHz,
+                     4. EXPERIMENTAL SETUP
+                                                                               a 250-Hz spacing between 1 and 3 kHz, and a 500-Hz spacing be-
+4.1. Data                                                                      tween 3 and 8 kHz. We optimize the RIR parameters ψ with Adam,
+                                                                               where the learning rate is set to 0.1, the momentum parameters to
+We use VCTK [34] as clean speech, selecting 103 speakers for train-            β1 = 0.9, and β2 = 0.99, and Nits. = 10 optimization iterations per
+ing, 2 for validation and 2 for testing. We curate recorded RIRs               diffusion step. We constrain the weights wb between 0 and 40 dB,
+Table 1: Dereverberation results obtained on VCTK-based reverberant datasets. Values indicate mean and standard deviation. We indicate
+     for each method in the table if is blind (i.e. have no knowledge of the RIR) and/or unsupervised. Boldface numbers indicate best
+                   performance for supervised and unsupervised methods separately. For all metrics, higher is better.
+
+                                                                      Matched                                    Mismatched
+       Method                    Blind    Unsup.     DNS-MOS           PESQ         ESTOI         DNS-MOS           PESQ           ESTOI
+
+       Reverberant                  -        -       3.14 ± 0.52    1.61 ± 0.37   0.50 ± 0.14    3.05 ± 0.47     1.57 ± 0.29    0.47 ± 0.11
+       RIF+Post [5]                ✗         ✓       3.41 ± 0.47    2.66 ± 0.40   0.76 ± 0.09    3.55 ± 0.45     2.86 ± 0.31    0.78 ± 0.09
+       InfDerevDPS [16]            ✗         ✓       3.91 ± 0.35    3.77 ± 0.41   0.83 ± 0.09    3.92 ± 0.32     3.69 ± 0.31    0.84 ± 0.08
+
+       NCSN++M [31]                ✓         ✗       3.75 ± 0.38    2.85 ± 0.55   0.80 ± 0.10    3.61 ± 0.39     2.08 ± 0.47    0.64 ± 0.09
+       SGMSE+M [14, 31]            ✓         ✗       3.88 ± 0.32    2.99 ± 0.48   0.78 ± 0.09    3.74 ± 0.34     2.48 ± 0.47    0.69 ± 0.09
+       StoRM [15]                  ✓         ✗       3.90 ± 0.33    3.33 ± 0.48   0.82 ± 0.10    3.83 ± 0.32     2.51 ± 0.53    0.67 ± 0.09
+
+       Yohena and Yatabe [7]       ✓         ✓       2.99 ± 0.56    1.80 ± 0.33   0.55 ± 0.12    2.94 ± 0.44     1.71 ± 0.29    0.51 ± 0.10
+       WPE [32]                    ✓         ✓       3.24 ± 0.54    1.81 ± 0.42   0.57 ± 0.14    3.10 ± 0.48     1.74 ± 0.37    0.54 ± 0.12
+       Saito et al. [20]           ✓         ✓       3.22 ± 0.56    1.68 ± 0.40   0.51 ± 0.13    3.12 ± 0.52     1.70 ± 0.33    0.52 ± 0.10
+       GibbsDDRM [33]              ✓         ✓       3.33 ± 0.53    1.70 ± 0.37   0.51 ± 0.13    3.30 ± 0.52     1.75 ± 0.36    0.52 ± 0.11
+       BUDDy (proposed)            ✓         ✓       3.76 ± 0.41    2.30 ± 0.53   0.66 ± 0.12    3.74 ± 0.38     2.24 ± 0.54    0.65 ± 0.12
+
+
+
+and the decays αb between 0.5 and 28. This prevents the optimiza-           the informed scenario to show the upper bound of dereveberation
+tion from approaching degenerate solutions at early sampling stages.        quality one can achieve with perfect knowledge of the room acous-
+Furthermore, we rescale the denoised estimate x̂0 at each step to           tics. We use the same score model sθ and cost function C(·, ·) for
+match the empirical dataset standard deviation σdata = 5 · 10−2 , so        InfDerevDPS [16] as for BUDDy. Blind supervised approaches
+as to enforce a constraint on the absolute magnitudes of ĥψ and x̂0 .      NCSN++M, SGMSE+M, and StoRM largely profit from the super-
+Forward and reverse diffusion We set the extremal diffusion times           vision during training, and boast a better performance compared to
+to Tmax = 0.5 and Tmin = 10−4 . For reverse diffusion, we follow            the unsupervised methods. However, in the mismatched setting, their
+Karras et al. [23] and employ a discretization of the diffusion time        performance dwindles because of their limited generalizability. In
+axis using N = 200 steps according to:                                      contrast, the proposed method BUDDy benefits from unsupervised
+                                                                            training, and therefore, modifying the acoustic conditions does not
+                                                           ρ
+                                                                            impact performance at all: typically NCSN++M loses 0.78 PESQ
+                        
+                           1/ρ       n       n/ρ     1/ρ
+  ∀n < N, τn = σn = Tmax       +          (Tmin − Tmax    ) , (12)          by switching from the matched case to the mismatched case, where
+                                  N −1
+                                                                            BUDDy loses 0.06. Our method then outperforms NCSN++M and
+with warping ρ = 10. We use the second-order Euler-Heun stochas-            comes within reach of other supervised approaches, although the
+tic sampler in [23] with Schurn = 50 and ζ ′ = 0.5 (prior scal-             generative nature of SGMSE+ and StoRM allow them to retain a
+ing, see [27]), and the initial point xinit is taken to be the output of    relatively high generalization ability. We also observe that the tradi-
+WPE [6] (with same parameters as the WPE baseline) plus Gaussian            tional blind unsupervised methods such as WPE [6] and Yohena and
+noise with standard deviation σ = Tmax . The annealing schedule             Yatabe [7] can only perform limited dereverberation, as they do not
+σ ′ (τ ) in the noise regularization term in (11) is the same as the dif-   benefit from the strong anechoic speech prior that learning-based
+fusion noise schedule σ(τ ) but we bound it between extremal values         methods parameterized with deep neural networks offer. Finally, we
+  ′
+σmin   = 5 × 10−4 and σmax ′
+                               = 10−2 .                                     note that BUDDy performs significantly better on all metrics than
+Network architecture: To remain consistent with [16], the uncon-            the diffusion-based blind unsupervised baselines Saito et al. [20]
+ditional score network architecture is NCSN++M [15, 31], a lighter          and GibbsDDRM [33], as these perform mild dereverberation in the
+variant of the NCSN++ [13] with 27.8M parameters instead of 65M.            presented acoustic conditions, where the input direct-to-reverberant
+                                                                            ratio is significanty lower than in the authors’ setup.
+Training configuration: We adopt Adam as the optimizer to train
+the unconditional score model, with a learning rate of 10−4 and an
+effective batch size of 16 for 190k steps. We track an exponential                                  6. CONCLUSIONS
+moving average of the DNN weights with a decay of 0.999.
+Evaluation metrics: We assess the quality and intelligibility of            This paper presents BUDDy, the first unsupervised method simulta-
+speech using the intrusive Perceptual Evaluation of Speech Qual-            neously performing blind dereverberation and RIR estimation using
+ity (PESQ) [35] and extended short-term objective intelligibil-             diffusion posterior sampling. BUDDy significantly outperforms tra-
+ity (ESTOI) [36]. We also employ the non-intrusive DNS-MOS [37],            ditional and diffusion-based unsupervised blind approaches. Unlike
+as a DNN-based mean opinion score (MOS) approximation.                      blind supervised methods, which often struggle with generalization
+                                                                            to unseen acoustic conditions, our unsupervised approach overcomes
+                5. RESULTS AND DISCUSSION                                   this limitation due to its ability to adapt the reverberation operator to
+                                                                            a broad range of room impulse responses. While blind supervised
+Table 1 shows the dereverberation results for all baselines and in-         methods outperform our approach when the tested conditions match
+dicates whether each approach is blind and/or unsupervised. We              those at training time, our method is on par or even outperforms
+included the results for RIF+Post [5] and InfDerevDPS [16] in               some supervised baselines in a mismatched setting.
+                       7. REFERENCES                                   [19] E. Moliner, F. Elvander, and V. Välimäki, “Blind audio
+                                                                            bandwidth extension: A diffusion-based zero-shot approach,”
+ [1] P. A. Naylor and N. D. Gaubitch, Speech Dereverberation,               arXiv, 2024.
+     vol. 59, Springer, 2011.                                          [20] K. Saito et al., “Unsupervised vocal dereverberation with
+ [2] M. Miyoshi and Y. Kaneda, “Inverse filtering of room acous-            diffusion-based generative models,” in Proc. ICASSP, 2023.
+     tics,” IEEE TASLP, vol. 36, no. 2, pp. 145–152, 1988.             [21] B. Kawar, M. Elad, S. Ermon, and J. Song, “Denoising diffu-
+ [3] T. Gerkmann and E. Vincent, “Spectral masking and filter-              sion restoration models,” in Proc. NeurIPS, 2022.
+     ing,” in Audio Source Separation and Speech Enhancement.          [22] Y. Song and S. Ermon, “Generative modeling by estimating
+     John Wiley & Sons, 2018.                                               gradients of the data distribution,” in Proc. NeurIPS, 2019.
+ [4] J. Mourjopoulos, P. Clarkson, and J. Hammond, “A compar-          [23] T. Karras, M. Aittala, T. Aila, and S. Laine, “Elucidating the
+     ative study of least-squares and homomorphic techniques for            design space of diffusion-based generative models,” in Proc.
+     the inversion of mixed phase signals,” in Proc. ICASSP, 1982.          NeurIPS, 2022.
+ [5] I. Kodrasi, T. Gerkmann, and S. Doclo, “Frequency-domain          [24] P. Vincent, “A connection between score matching and denois-
+     single-channel inverse filtering for speech dereverberation:           ing autoencoders,” Neural Computation, vol. 23, no. 7, pp.
+     Theory and practice,” in Proc. ICASSP, 2014.                           1661–1674, 2011.
+ [6] T. Nakatani et al.,    “Speech dereverberation based on           [25] H. Chung et al., “Diffusion posterior sampling for general
+     maximum-likelihood estimation with time-varying Gaussian               noisy inverse problems,” in Proc. ICLR, 2023.
+     source model,” IEEE TASLP, vol. 16, pp. 1512–1527, 2008.          [26] T. Gerkmann and R. Martin, “Empirical distributions of dft-
+ [7] F. Yohena and K. Yatabe, “Single-channel blind dereverbera-            domain speech coefficients based on estimated speech vari-
+     tion based on rank-1 matrix lifting in time-frequency domain,”         ances,” IWAENC, 2010.
+     in Proc. ICASSP, 2024.                                            [27] E. Moliner, J. Lehtinen, and V. Välimäki, “Solving audio in-
+ [8] D. Wang and J. Chen, “Supervised speech separation based on            verse problems with a diffusion model,” in Proc. ICASSP,
+     deep learning: An overview,” IEEE/ACM TASLP, vol. 26, no.              2023.
+     10, pp. 1702–1726, 2018.                                          [28] Y. Avargel and I. Cohen, “System identification in the short-
+                                                                            time Fourier transform domain with crossband filtering,” IEEE
+ [9] D. S. Williamson and D. Wang, “Time-frequency masking in
+                                                                            TASLP, vol. 15, no. 4, pp. 1305–1319, 2007.
+     the complex domain for speech dereverberation and denois-
+     ing,” IEEE/ACM TASLP, vol. 25, no. 7, pp. 1492–1501, 2017.        [29] T. Gerkmann, M. Krawczyk-Becker, and J. Le Roux, “Phase
+                                                                            processing for single channel speech enhancement: History
+[10] Y. Zhao, D. Wang, B. Xu, and T. Zhang, “Monaural speech                and recent advances,” IEEE Signal Process. Magazine, vol.
+     dereverberation using temporal convolutional networks with             32, no. 2, pp. 55–66, Mar. 2015.
+     self attention,” IEEE/ACM TASLP, vol. 28, pp. 1598–1607,
+     2020.                                                             [30] A. V. Oppenheim and R. W. Schafer, Digital Signal Process-
+                                                                            ing, 1975.
+[11] K. Han et al., “Learning spectral mapping for speech derever-
+     beration and denoising,” IEEE/ACM TASLP, vol. 23, no. 6, pp.      [31] J.-M. Lemercier, J. Richter, S. Welker, and T. Gerkmann,
+     982–992, 2015.                                                         “Analysing discriminative versus diffusion generative models
+                                                                            for speech restoration tasks,” in Proc. ICASSP, 2023.
+[12] J. Ho, A. Jain, and P. Abbeel, “Denoising diffusion probabilis-
+                                                                       [32] T. Nakatani, T. Yoshioka, K. Kinoshita, M. Miyoshi, and
+     tic models,” in Proc. NeurIPS, 2020.
+                                                                            B. Juang, “Blind speech dereverberation with multi-channel
+[13] Y. Song et al., “Score-based generative modeling through               linear prediction based on short time Fourier transform repre-
+     stochastic differential equations,” in Proc. ICLR, 2021.               sentation,” in Proc. ICASSP, 2008, pp. 85–88.
+[14] J. Richter, S. Welker, J.-M. Lemercier, B. Lay, and T. Gerk-      [33] N. Murata and Sothers, “GibbsDDRM: A partially collapsed
+     mann,      “Speech enhancement and dereverberation with                Gibbs sampler for solving blind inverse problems with denois-
+     diffusion-based generative models,” IEEE/ACM TASLP, vol.               ing diffusion restoration,” in Proc. ICML, 2023, pp. 25501–
+     31, pp. 2351–2364, 2023.                                               25522.
+[15] J.-M. Lemercier, J. Richter, S. Welker, and T. Gerkmann,          [34] C. Valentini-Botinhao et al., “Reverberant speech database for
+     “StoRM: A diffusion-based stochastic regeneration model for            training speech dereverberation algorithms and TTS models,”
+     speech enhancement and dereverberation,” IEEE/ACM TASLP,               University of Edinburgh, 2016.
+     vol. 31, pp. 2724–2737, 2023.                                     [35] A. Rix, J. Beerends, M. Hollier, and A. Hekstra, “Perceptual
+[16] J.-M. Lemercier, S. Welker, and T. Gerkmann, “Diffusion pos-           evaluation of speech quality (PESQ)-a new method for speech
+     terior sampling for informed single-channel dereverberation,”          quality assessment of telephone networks and codecs,” in Proc.
+     in Proc. WASPAA, 2023.                                                 ICASSP, 2001.
+[17] H. Chung, J. Kim, S. Kim, and J. C. Ye, “Parallel diffu-          [36] J. Jensen and C. Taal, “An algorithm for predicting the in-
+     sion models of operator and image for blind inverse problems,”         telligibility of speech masked by modulated noise maskers,”
+     CVPR, 2023.                                                            IEEE/ACM TASLP, vol. 24, no. 11, pp. 2009–2022, 2016.
+                                                                       [37] C. K. A. Reddy, V. Gopal, and R. Cutler, “DNSMOS: A non-
+[18] C. Laroche, A. Almansa, and E. Coupeté, “Fast diffusion em:
+                                                                            intrusive perceptual objective speech quality metric to evaluate
+     a diffusion model for blind inverse problems with application
+                                                                            noise suppressors,” in Proc. ICASSP, 2021.
+     to deconvolution,” IEEE/CVF WACV, 2024.
+

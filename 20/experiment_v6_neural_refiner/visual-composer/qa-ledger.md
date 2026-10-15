@@ -1,0 +1,7 @@
+| Issue | Artifact | Page/section | Severity | Fix | Owner | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Top paired-difference annotation overlapped the panel title in the initial render. | `v6_rmse_comparison` | Panel (c) | Medium | Placed the top label below its marker and retained the other labels in unused vertical space. | Codex | Resolved |
+| Clean-condition annotation was too close to the x-axis label after the first adjustment. | `v6_rmse_comparison` | Panel (c) | Medium | Used condition-aware vertical offsets. | Codex | Resolved |
+| Clipping, contrast, legend readability, numerical labels, and traceability. | Both figures | Full figure | Low | Rendered final PNGs and visually inspected them; fixed-color method encoding is also distinguished by marker shape. | Codex | Passed |
+| A frequency-only neural correction is not a native time-domain channel or click reconstruction. | `v6_click_recovery_comparison` | Panels (a)–(b) | High | Explicitly labelled the orange waveform as a phase-preserving diagnostic and reported its direct NRMSE. The selected event has BCSC 0.134 versus diagnostic neural 0.997, so no end-to-end waveform-improvement claim is made. | Codex | Resolved by disclosure |
+| Ten sparse channels are difficult to inspect at a common 4 ms scale. | `v6_channel_recovery_comparison` | Top two rows | Low | Normalised each event independently and retained the 35-point response panels as the primary, directly evaluated recovery evidence. | Codex | Passed |

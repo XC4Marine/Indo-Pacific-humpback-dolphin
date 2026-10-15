@@ -142,3 +142,35 @@
 - 七条件使用相同WaveformTransformer/种子/预算/来源隔离五折；简单基线为逻辑回归与浅层梯度提升，仅训练于严格匹配队列。
 - 结果：信号区AUROC显著>0.5（形态本身可分）；宽窗口背景AUROC CI下限未>0.5（无背景类别信息）；BCSC残差未显著优于背景（未证实残差泄漏）；严格匹配后全波形显著下降（原任务受SNR/幅度/频谱不平衡影响）。
 - 遮罩合成与BCSC合成自检均通过；输出含匹配清单、波形缓存、特征、折分、模型、预测、指标、Bootstrap与PNG图。
+
+## 局部能量块稀疏 Physics 单种子五折实验（2026-08-27）
+
+- 实现入口：`D:\Project_Github\Indo-Pacific-humpback-dolphin\21_PhysicsInformedClickClassification\pipeline.py`；新增57点、stride 1、无padding的尾部局部RMS能量损失，并保留旧逐点Physics与历史三条件默认行为。
+- 数据、五折和[-15,15] dB混噪与既有低SNR实验一致；数据哈希均为 `70204b5ac4484bb4a08a684e29083390cec974502061c45ba48ea2ef9ac130ed`。四条件配置哈希为 `4aea26d47206f919`。
+- 种子20260826共完成20个模型；产物验收通过：20权重、20组epoch日志、20组batch日志、20行折指标、4行种子指标、28000条唯一逐样本预测。
+- AUROC：Waveform Transformer 0.84701，Recon+BCE 0.87051，旧逐点Physics 0.87861，Local-Energy Physics 0.87614。
+- Local-Energy−旧Physics AUROC差为-0.00247，录音组Bootstrap 95% CI [-0.00883, 0.00478]，不能声明分类改善；Local-Energy−Recon+BCE为+0.00563，CI [-0.00487, 0.01651]；Local-Energy−Transformer为+0.02913，CI [0.01161, 0.04994]。
+- Local-Energy−旧Physics的局部能量Hoyer差为+0.03034，95% CI [-0.09475, 0.14719]；活动块比例差为+0.03925，CI [-0.09437, 0.17828]，均不能声明形成更明显块稀疏。
+- Local-Energy原始Physics均值为0.0008593，加权贡献均值为8.593e-7，仅占总损失约8.63e-7；当前β=0.001下约束量级偏小，是后续权重敏感性实验的重点。
+- 输出与中文报告位于 `D:\Project_Github\Indo-Pacific-humpback-dolphin\21_PhysicsInformedClickClassification\outputs_snr_local_energy_seed_20260826`；运行环境为 `D:\Python_env\toothwhale\python.exe`。所有置信区间仅反映录音来源不确定性，不能证明跨初始化稳定性。
+
+## 第22个倒谱–CLUB物理解耦二分类初版（2026-09-01）
+
+- 独立入口为 `D:\Project_Github\Indo-Pacific-humpback-dolphin\22_CepstrumCLUBPhysicsInformedClassification\experiment.py`，固定环境为 `D:\Python_env\toothwhale\python.exe`。
+- 任务边界仅为中华白海豚click（1）与困难噪声（0）；倒谱来自接收信号，只是弱信道结构提示，不是真实信道标签。
+- 数据只读第21个固定低SNR清单并复制其7000条样本、噪声配对、目标SNR与来源隔离折；第22个缓存和产物完全独立。数据哈希为 `224ec22c07267873dc7a045fd4a339bfc2164f129d144acc702828ac61506615`。
+- 统一滤波后的clean click以零填充平移对齐绝对峰至2880点：原本1940/3500条已对齐，实际平移1560条，最终3500/3500条精确对齐；最大SNR定标误差3.553e-15 dB，来源泄漏0。
+- 网络使用共享可学习前端及click/channel独立编码器，输出64维 `Z_c/Z_h`；channel响应为0–5 ms的2881点严格因果 `[1,0.25*tanh(tail)]`，不存在负时延或可学习直达参数。
+- 功率倒谱统一零填充至8192点，索引0–46清零、47–2880按逐样本RMS归一化；Channel loss仅对正样本启用。
+- CLUB采用先Q后主干的双优化器：Q阶段潜变量截断梯度，主干阶段冻结Q；MIM使用无固定点随机负配对，batch小于2时为可微零。
+- 7项unittest及RTX 4060真实16样本GPU smoke全部通过。当前只证明代码、数据契约、张量和梯度路径正确；尚未执行quick或完整五折多种子实验，不支持性能、解耦有效性或论文结论。
+
+## 第22个轻量化完整消融结果（2026-09-01）
+
+- 完整运行入口为`22_CepstrumCLUBPhysicsInformedClassification/experiment.py --mode full`；输出目录为`outputs_full_5seeds_6conditions`，配置哈希`5620bbfb55f100cb`。
+- 轻量主模型584,699参数，含Q为609,531；12项测试及单折单epoch集成恢复检查通过。
+- 五种子×五折×六条件共150模型全部完成，产物验收通过，逐样本预测共210000条且键唯一、数值有限。
+- AUROC：Full 0.89983、w/o Recon 0.89490、w/o Channel 0.89853、w/o MIM 0.90512、BCE-only 0.89781、Direct classifier 0.89781。
+- Full减各消融的AUROC两级配对Bootstrap 95% CI全部跨0；当前不能宣称Recon、Channel或MIM带来稳定分类提升，也不能仅凭这些分类结果宣称物理解耦成立。
+- w/o MIM点估计高于Full约0.00530，但差值CI跨0；应表述为当前证据不足，而非MIM确定有害。
+- BCE-only与Direct classifier因有效训练路径完全相同而得到相同结果；后续若需检验“编解码结构本身”，必须定义会实际改变分类前向或梯度路径的非冗余直接分类基线。

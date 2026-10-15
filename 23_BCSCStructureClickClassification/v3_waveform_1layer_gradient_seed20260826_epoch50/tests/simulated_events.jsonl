@@ -1,0 +1,2 @@
+{"kind": "batch", "seed": 20260826, "test_fold": 0, "epoch": 1, "batch": 1, "loss": 0.4, "global": {"l2_norm": 10.0, "rms": 0.1}, "modules": {"Patch Embedding": {"rms": 0.0001}, "CLS token": {"rms": 0.0001}, "Attention QKV": {"rms": 0.0001}, "Attention输出投影": {"rms": 0.0001}, "FFN Linear 1": {"rms": 0.0001}, "FFN Linear 2": {"rms": 0.0001}, "LayerNorm": {"rms": 0.0001}, "分类头": {"rms": 0.0001}}, "health": ["异常峰值：全局梯度L2超过此前中位数10倍"]}
+{"partial":

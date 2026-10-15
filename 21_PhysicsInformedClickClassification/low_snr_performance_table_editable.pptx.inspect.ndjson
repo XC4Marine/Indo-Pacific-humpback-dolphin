@@ -1,0 +1,13 @@
+{"kind":"deck","id":"pr/lju1a3","name":"Deck"}
+{"kind":"layout","layoutId":"46e9b54e-9ad2-4a69-ba21-430bc136aad5","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"5ea1e61c-1e9d-49e1-b6a2-425a67eaa663","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/ypwapk","slide":1,"title":"低SNR条件下，Physics约束模型取得最高点估计","textShapes":4}
+{"kind":"shape","id":"sh/6pk7a94z","slide":1,"name":"title-accent-rule","bbox":[52,52,10,74]}
+{"kind":"textbox","id":"sh/tsbql43q","slide":1,"name":"slide-title","text":"低SNR条件下，Physics约束模型取得最高点估计","textPreview":"低SNR条件下，Physics约束模型取得最高点估计","textChars":26,"textLines":1,"bbox":[84,48,1450,74]}
+{"kind":"textbox","id":"sh/8r2pczm5","slide":1,"name":"slide-subtitle","text":"−15至15 dB混合实验 · 所有数值均报告为点估计与95%置信区间","textPreview":"−15至15 dB混合实验 · 所有数值均报告为点估计与95%置信区间","textChars":35,"textLines":1,"bbox":[84,130,1450,44]}
+{"kind":"shape","id":"sh/utk7e94b","slide":1,"name":"physics-row-accent","bbox":[52,582,9,142]}
+{"kind":"shape","id":"sh/hwvqpo3m","slide":1,"name":"footer-rule","bbox":[52,772,1496,1]}
+{"kind":"textbox","id":"sh/gvmpgjmh","slide":1,"name":"table-note","text":"注：蓝色表示各指标的最高点估计；置信区间重叠本身不构成显著性检验。","textPreview":"注：蓝色表示各指标的最高点估计；置信区间重叠本身不构成显著性检验。","textChars":33,"textLines":1,"bbox":[52,790,1400,44]}
+{"kind":"textbox","id":"sh/3yd8ryls","slide":1,"name":"slide-number","text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[1490,834,58,28]}
+{"kind":"table","id":"tb/21cfq90f","slide":1,"name":"","rows":4,"cols":7,"preview":"条件 | AUROC | AUPRC | Balanced accuracy | F1 | 灵敏度 | 特异度","bbox":[52,224,1496,500]}
+{"kind":"notes","id":"nt/ypwapk","slide":1,"text":"[Sources]\n- User-provided low-SNR experiment performance table in the current task.\n[/Sources]\n\nAll values were transcribed verbatim. Visual emphasis indicates only the largest supplied point estimate in each metric; no significance claim is added."}
