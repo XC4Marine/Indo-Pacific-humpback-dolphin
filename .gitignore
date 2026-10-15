@@ -27,6 +27,12 @@
 *.zip
 *.tar.gz
 *.rar
+*.json
+*.npz
+*.log
+*.env
+*.prt
+*.arr
 
 # 大型 CSV 数据文件
 00_Data/*.csv
@@ -48,6 +54,20 @@ env/
 venv/
 .venv/
 *.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# ======== Node.js ========
+node_modules/
+
+# ======== Runtime / temporary files ========
+*.pid
+*.err
+*.asv
 dist/
 build/
 
